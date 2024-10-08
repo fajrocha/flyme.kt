@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: flyme
+  r2dbc:
+    username: faroc
+    password: changeit
+    url: r2dbc:postgresql://localhost:5432/flyme
+  flyway:
+    user: faroc
+    password: changeit
+    url: jdbc:postgresql://localhost:5432/flyme
+    locations: classpath:/db/migration

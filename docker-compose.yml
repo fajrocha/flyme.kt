@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres
+    container_name: fly-pg-db
+    environment:
+      POSTGRES_USER: faroc
+      POSTGRES_PASSWORD: changeit
+      PGDATA: /data/postgres
+      POSTGRES_DB: flyme
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - flyme
+    restart: unless-stopped
+
+volumes:
+  postgres:
+
+networks:
+  flyme:
+    driver: bridge
