@@ -1,5 +1,9 @@
 package com.faroc.flyme.airline
 
+import com.faroc.flyme.airline.requests.AddAirlineRequest
+import com.faroc.flyme.airline.responses.AirlinesResponse
+import com.faroc.flyme.common.errors.problem
+import com.github.michaelbull.result.fold
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -25,7 +29,13 @@ class AirlineController(private val service: AirlineService) {
     }
 
     @GetMapping("{airlineId}")
-    suspend fun fetchAirline(@PathVariable airlineId: Long) : AirlinesResponse {
-        return AirlinesResponse(1, "", "")
+    suspend fun fetchAirline(@PathVariable airlineId: Long) : ResponseEntity<*> {
+        val result = service.fetchAirline(airlineId)
+
+        return result.fold(
+            success = { ResponseEntity.ok(result.value) },
+            failure = { result.error.problem() }
+        )
     }
 }
+

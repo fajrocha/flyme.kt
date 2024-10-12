@@ -1,4 +1,4 @@
-package com.faroc.flyme.airline
+package com.faroc.flyme.airline.responses
 
 data class AirlinesResponse(
     val id: Long,

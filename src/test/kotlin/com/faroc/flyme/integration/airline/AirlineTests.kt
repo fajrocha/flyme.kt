@@ -1,12 +1,11 @@
 package com.faroc.flyme.integration.airline
 
 import com.faroc.flyme.TestcontainersConfiguration
-import com.faroc.flyme.airline.AddAirlineRequest
-import com.faroc.flyme.airline.AirlinesResponse
+import com.faroc.flyme.airline.requests.AddAirlineRequest
+import com.faroc.flyme.airline.responses.AirlinesResponse
 import com.faroc.flyme.airline.AirlineRepository
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeEquivalentTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainAll
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,7 +33,7 @@ class AirlineTests(
 
             // when:
             val requestResult = client.post()
-                .uri("/v1/airlines") // Ensure to have the leading slash
+                .uri("/v1/airlines")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(getTwoRecordsRequestBody()))
                 .exchange()
@@ -72,7 +71,7 @@ class AirlineTests(
 
             // when:
             val fetchRequest = client.get()
-                .uri("/v1/airlines") // Ensure to have the leading slash
+                .uri("/v1/airlines")
                 .exchange()
                 .expectStatus().isOk
                 .expectBodyList<AirlinesResponse>()
@@ -95,7 +94,7 @@ class AirlineTests(
         runBlocking {
             // given:
             val result = client.post()
-                .uri("/v1/airlines") // Ensure to have the leading slash
+                .uri("/v1/airlines")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(getOneRecordRequestBody()))
                 .exchange()
@@ -107,7 +106,7 @@ class AirlineTests(
 
             // when:
             val fetchRequest = client.get()
-                .uri("/v1/airlines/$airlineAddedId") // Ensure to have the leading slash
+                .uri("/v1/airlines/$airlineAddedId")
                 .exchange()
                 .expectStatus().isOk
                 .expectBody<AirlinesResponse>()

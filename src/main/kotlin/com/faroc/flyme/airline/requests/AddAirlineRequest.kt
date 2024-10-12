@@ -1,4 +1,4 @@
-package com.faroc.flyme.airline
+package com.faroc.flyme.airline.requests
 
 data class AddAirlineRequest(
     val name: String,
