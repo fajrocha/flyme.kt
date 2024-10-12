@@ -24,7 +24,7 @@ class AirlineService(
         val airlinesAdded = airlineRepository.saveAll(airlinesToAdd).toList()
 
         return airlinesAdded.map {
-            (country, name, id) -> AirlinesResponse(id!!, name, country)
+            (name, country, id) -> AirlinesResponse(id!!, name, country)
         }
     }
 

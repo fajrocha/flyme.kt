@@ -4,14 +4,17 @@ import com.faroc.flyme.TestcontainersConfiguration
 import com.faroc.flyme.airline.requests.AddAirlineRequest
 import com.faroc.flyme.airline.responses.AirlinesResponse
 import com.faroc.flyme.airline.AirlineRepository
+import com.faroc.flyme.airline.domain.errors.AirlineNotFound
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainAll
+import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.http.ProblemDetail
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
@@ -25,11 +28,20 @@ class AirlineTests(
     @Autowired val client: WebTestClient,
     @Autowired val repository: AirlineRepository) {
 
+    @BeforeEach
+    fun clearDatabase() {
+        runBlocking {
+            repository.deleteAll()
+        }
+    }
+
     @Test
     fun `when adding airlines to airport should add airlines`() {
         runBlocking {
             // given:
             val requestBody = getTwoRecordsRequestBody()
+            val requestNames = getTwoRecordsRequestBody().map { rb -> rb.name }
+            val requestCountries = getTwoRecordsRequestBody().map { rb -> rb.country }
 
             // when:
             val requestResult = client.post()
@@ -40,22 +52,24 @@ class AirlineTests(
                 .expectStatus().isCreated
                 .expectBodyList<AirlinesResponse>()
                 .returnResult()
-            val responseBody = requestResult.responseBody ?: listOf()
 
             // then:
+            val responseBody = requestResult.responseBody ?: listOf()
+
             responseBody.size shouldBeEqualTo requestBody.size
             repository.count() shouldBeEqualTo requestBody.size.toLong()
 
             responseBody.map { rb -> rb.id }.forEach {
                 i -> repository.existsById(i).shouldBeTrue()
             }
-
-            responseBody.map { rb -> rb.name } shouldContainAll getTwoRecordsRequestBody().map { rb -> rb.name }
-            responseBody.map { rb -> rb.country } shouldContainAll getTwoRecordsRequestBody().map { rb -> rb.country }
-
-            // teardown
             val ids = responseBody.map { rb -> rb.id }
             repository.deleteAllById(ids)
+
+            val responseNames = responseBody.map { rb -> rb.name }
+            responseNames shouldContainAll requestNames
+
+            val responseCountries = responseBody.map { rb -> rb.country }
+            responseCountries shouldContainAll requestCountries
         }
     }
 
@@ -90,6 +104,26 @@ class AirlineTests(
     }
 
     @Test
+    fun `when fetching non existing airline from airport should return not found`() {
+        runBlocking {
+            // given:
+            val airlineId = 1L
+
+            // when:
+            val fetchRequest = client.get()
+                .uri("/v1/airlines/$airlineId")
+                .exchange()
+                .expectStatus().isNotFound
+                .expectBody<ProblemDetail>()
+                .returnResult()
+            val responseBody = fetchRequest.responseBody
+
+            // then:
+            responseBody?.detail shouldBeEqualTo AirlineNotFound.DESCRIPTION
+        }
+    }
+
+    @Test
     fun `when fetching airline from airport should return airline`() {
         runBlocking {
             // given:
@@ -115,9 +149,6 @@ class AirlineTests(
 
             // then:
             responseBody?.id shouldBeEqualTo airlineAddedId
-
-            // teardown
-            repository.deleteById(airlineAddedId)
         }
     }
 
