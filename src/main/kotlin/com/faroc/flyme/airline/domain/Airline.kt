@@ -1,4 +1,4 @@
-package com.faroc.flyme.airline
+package com.faroc.flyme.airline.domain
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
@@ -6,11 +6,12 @@ import org.springframework.data.relational.core.mapping.Table
 
 @Table("airline")
 data class Airline(
-    @Id
-    @Column("airline_id")
-    val id: Long? = null,
     @Column("name")
     val name: String,
     @Column("country")
-    val country: String
+    val country: String,
+    @Id
+    @Column("airline_id")
+    val id: Long? = null,
 )
+
