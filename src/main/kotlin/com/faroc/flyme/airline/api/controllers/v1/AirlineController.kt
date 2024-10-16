@@ -1,10 +1,10 @@
-package com.faroc.flyme.airline.controllers.v1
+package com.faroc.flyme.airline.api.controllers.v1
 
 import com.faroc.flyme.airline.services.AirlineService
-import com.faroc.flyme.airline.requests.AddAirlineRequest
-import com.faroc.flyme.airline.responses.AirlinesResponse
-import com.faroc.flyme.common.errors.problem
-import com.faroc.flyme.common.middleware.ValidationProblemDetail
+import com.faroc.flyme.airline.api.requests.AddAirlineRequest
+import com.faroc.flyme.airline.api.responses.AirlinesResponse
+import com.faroc.flyme.common.api.errors.toProblem
+import com.faroc.flyme.common.api.middleware.ValidationProblemDetail
 import com.github.michaelbull.result.fold
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.ArraySchema
@@ -40,7 +40,7 @@ class AirlineController(private val service: AirlineService) {
                 ]),
         ApiResponse(
             responseCode = "400",
-            description = "Validation error. Errors property will contain fields which are wrong.",
+            description = "Invalid input. Errors property will contain fields which are wrong.",
             content = [(Content(
                 mediaType = "application/json",
                 schema = Schema(implementation = ValidationProblemDetail::class)))
@@ -61,11 +61,11 @@ class AirlineController(private val service: AirlineService) {
     }
 
 
-    @Operation(summary = "Get airlines from the platform.", description = "Get available airlines from the platform")
+    @Operation(summary = "Fetch airlines.", description = "Fetch available airlines from the platform")
     @ApiResponses(value = [
         ApiResponse(
             responseCode = "200",
-            description = "Added airlines.",
+            description = "Fetched airlines successfully.",
             content = [(Content(
                 mediaType = "application/json",
                 array = ArraySchema(schema = Schema(implementation = AirlinesResponse::class))))
@@ -83,18 +83,18 @@ class AirlineController(private val service: AirlineService) {
         return service.fetchAirlines()
     }
 
-    @Operation(summary = "Get airlines from the platform.", description = "Get available airlines from the platform")
+    @Operation(summary = "Fetch airline by id.", description = "Fetch airline by id.")
     @ApiResponses(value = [
         ApiResponse(
             responseCode = "200",
-            description = "Added airlines.",
+            description = "Fetched airline successfully.",
             content = [(Content(
                 mediaType = "application/json",
                 schema = Schema(implementation = AirlinesResponse::class)))
             ]),
         ApiResponse(
             responseCode = "404",
-            description = "Added airlines.",
+            description = "Airline requested not found.",
             content = [(Content(
                 mediaType = "application/json",
                 schema = Schema(implementation = ProblemDetail::class)))
@@ -113,7 +113,7 @@ class AirlineController(private val service: AirlineService) {
 
         return result.fold(
             success = { ResponseEntity.ok(result.value) },
-            failure = { result.error.problem() }
+            failure = { r -> r.toProblem() }
         )
     }
 }

@@ -1,4 +1,4 @@
-package com.faroc.flyme.common.middleware
+package com.faroc.flyme.common.api.middleware
 
 import org.springframework.validation.method.ParameterErrors
 import org.springframework.web.bind.annotation.ExceptionHandler

@@ -1,8 +1,8 @@
 package com.faroc.flyme.integration.airline
 
 import com.faroc.flyme.TestcontainersConfiguration
-import com.faroc.flyme.airline.requests.AddAirlineRequest
-import com.faroc.flyme.airline.responses.AirlinesResponse
+import com.faroc.flyme.airline.api.requests.AddAirlineRequest
+import com.faroc.flyme.airline.api.responses.AirlinesResponse
 import com.faroc.flyme.airline.infrastructure.AirlineRepository
 import com.faroc.flyme.airline.domain.errors.AirlineNotFound
 import kotlinx.coroutines.runBlocking

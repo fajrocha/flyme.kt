@@ -1,4 +1,4 @@
-package com.faroc.flyme.common.errors
+package com.faroc.flyme.common.api.errors
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity
 sealed class Error(val errorType: ErrorTypes, val description: String? = null, val code: String? = null) {
 }
 
-fun Error.problem(): ResponseEntity<ProblemDetail> {
+fun Error.toProblem(): ResponseEntity<ProblemDetail> {
     val statusCode = when (this.errorType) {
         ErrorTypes.NOT_FOUND -> HttpStatus.NOT_FOUND
         ErrorTypes.CONFLICT -> HttpStatus.CONFLICT

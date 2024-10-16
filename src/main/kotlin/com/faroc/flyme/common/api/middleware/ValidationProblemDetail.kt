@@ -1,4 +1,4 @@
-package com.faroc.flyme.common.middleware
+package com.faroc.flyme.common.api.middleware
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail

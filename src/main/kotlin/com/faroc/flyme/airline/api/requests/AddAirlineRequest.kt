@@ -1,4 +1,4 @@
-package com.faroc.flyme.airline.requests
+package com.faroc.flyme.airline.api.requests
 
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
