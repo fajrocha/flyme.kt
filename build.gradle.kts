@@ -33,6 +33,7 @@ dependencies {
 	implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.0")
+	implementation("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("org.postgresql:postgresql")
 	runtimeOnly("org.postgresql:r2dbc-postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

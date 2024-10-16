@@ -3,7 +3,7 @@ package com.faroc.flyme.integration.airline
 import com.faroc.flyme.TestcontainersConfiguration
 import com.faroc.flyme.airline.requests.AddAirlineRequest
 import com.faroc.flyme.airline.responses.AirlinesResponse
-import com.faroc.flyme.airline.AirlineRepository
+import com.faroc.flyme.airline.infrastructure.AirlineRepository
 import com.faroc.flyme.airline.domain.errors.AirlineNotFound
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
@@ -26,7 +26,8 @@ import kotlin.test.Test
 @Import(TestcontainersConfiguration::class)
 class AirlineTests(
     @Autowired val client: WebTestClient,
-    @Autowired val repository: AirlineRepository) {
+    @Autowired val repository: AirlineRepository
+) {
 
     @BeforeEach
     fun clearDatabase() {

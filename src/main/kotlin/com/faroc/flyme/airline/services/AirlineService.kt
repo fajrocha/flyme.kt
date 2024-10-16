@@ -1,7 +1,8 @@
-package com.faroc.flyme.airline
+package com.faroc.flyme.airline.services
 
 import com.faroc.flyme.airline.domain.Airline
 import com.faroc.flyme.airline.domain.errors.AirlineNotFound
+import com.faroc.flyme.airline.infrastructure.AirlineRepository
 import com.faroc.flyme.airline.requests.AddAirlineRequest
 import com.faroc.flyme.airline.responses.AirlinesResponse
 import com.faroc.flyme.common.errors.Error
@@ -14,7 +15,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class AirlineService(
-    private val airlineRepository: AirlineRepository) {
+    private val airlineRepository: AirlineRepository
+) {
 
     suspend fun addAirlines(airlines: List<AddAirlineRequest>): List<AirlinesResponse> {
         val airlinesToAdd = airlines.map {

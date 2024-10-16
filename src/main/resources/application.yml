@@ -10,3 +10,9 @@ spring:
     password: changeit
     url: jdbc:postgresql://localhost:5432/flyme
     locations: classpath:/db/migration
+springdoc:
+  packages-to-scan: com.faroc.flyme
+  group-configs:
+    - group: V1
+      paths-to-match:
+        - /v1/**
