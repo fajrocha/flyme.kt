@@ -1,4 +1,4 @@
-package com.faroc.flyme.airline.domain
+package com.faroc.flyme.airlines.domain
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column

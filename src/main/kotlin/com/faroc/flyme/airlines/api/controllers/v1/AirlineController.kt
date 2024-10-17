@@ -1,8 +1,8 @@
-package com.faroc.flyme.airline.api.controllers.v1
+package com.faroc.flyme.airlines.api.controllers.v1
 
-import com.faroc.flyme.airline.services.AirlineService
-import com.faroc.flyme.airline.api.requests.AddAirlineRequest
-import com.faroc.flyme.airline.api.responses.AirlinesResponse
+import com.faroc.flyme.airlines.api.requests.AddAirlineRequest
+import com.faroc.flyme.airlines.api.responses.AirlinesResponse
+import com.faroc.flyme.airlines.services.AirlineService
 import com.faroc.flyme.common.api.errors.toProblem
 import com.faroc.flyme.common.api.middleware.ValidationProblemDetail
 import com.github.michaelbull.result.fold
@@ -17,27 +17,22 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 
 @RestController("Airlines Controller V1")
 @RequestMapping("v1/airlines")
 @Tag(name = "Airlines")
 class AirlineController(private val service: AirlineService) {
-    @Operation(summary = "Add airlines to platform.", description = "Add airlines to platform")
+    @Operation(summary = "Add airline.", description = "Add airline to platform")
     @ApiResponses(value = [
         ApiResponse(
-                responseCode = "201",
-                description = "Added airlines.",
-                content = [(Content(
-                    mediaType = "application/json",
-                    array = ArraySchema(schema = Schema(implementation = AirlinesResponse::class))))
-                ]),
+            responseCode = "201",
+            description = "Added airline.",
+            content = [(Content(
+                mediaType = "application/json",
+                array = ArraySchema(schema = Schema(implementation = AirlinesResponse::class))))
+            ]),
         ApiResponse(
             responseCode = "400",
             description = "Invalid input. Errors property will contain fields which are wrong.",
@@ -46,20 +41,19 @@ class AirlineController(private val service: AirlineService) {
                 schema = Schema(implementation = ValidationProblemDetail::class)))
             ]),
         ApiResponse(
-                responseCode = "500",
-                description = "Failed to add airlines due to internal error.",
-                content = [(Content(
-                    mediaType = "application/json",
-                    schema = Schema(implementation = ProblemDetail::class)))
-                ]),
-        ]
+            responseCode = "500",
+            description = "Failed to add airline due to internal error.",
+            content = [(Content(
+                mediaType = "application/json",
+                schema = Schema(implementation = ProblemDetail::class)))
+            ]),
+    ]
     )
-    @PostMapping
-    suspend fun addAirlines(
-        @Valid @RequestBody request: List<AddAirlineRequest>) : ResponseEntity<List<AirlinesResponse>> {
-        return ResponseEntity(service.addAirlines(request), HttpStatus.CREATED)
+    @PostMapping()
+    suspend fun addAirlines2(
+        @RequestBody @Valid request: AddAirlineRequest) : ResponseEntity<AirlinesResponse> {
+        return ResponseEntity(service.addAirline(request), HttpStatus.CREATED)
     }
-
 
     @Operation(summary = "Fetch airlines.", description = "Fetch available airlines from the platform")
     @ApiResponses(value = [

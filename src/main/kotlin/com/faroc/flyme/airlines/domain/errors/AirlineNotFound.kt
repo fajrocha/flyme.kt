@@ -1,4 +1,4 @@
-package com.faroc.flyme.airline.domain.errors
+package com.faroc.flyme.airlines.domain.errors
 
 class AirlineNotFound {
     companion object {

@@ -1,6 +1,6 @@
-package com.faroc.flyme.airline.infrastructure
+package com.faroc.flyme.airlines.infrastructure
 
-import com.faroc.flyme.airline.domain.Airline
+import com.faroc.flyme.airlines.domain.Airline
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 
 interface AirlineRepository : CoroutineCrudRepository<Airline, Long> {

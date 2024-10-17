@@ -1,6 +1,6 @@
 package com.faroc.flyme.planes.api.controllers.v1
 
-import com.faroc.flyme.airline.api.responses.AirlinesResponse
+import com.faroc.flyme.airlines.api.responses.AirlinesResponse
 import com.faroc.flyme.common.api.errors.toProblem
 import com.faroc.flyme.common.api.middleware.ValidationProblemDetail
 import com.faroc.flyme.planes.api.requests.PlaneModelRequest

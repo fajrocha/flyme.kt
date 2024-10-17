@@ -1,10 +1,11 @@
-package com.faroc.flyme.integration.airline
+package com.faroc.flyme.integration.airlines
 
 import com.faroc.flyme.TestcontainersConfiguration
-import com.faroc.flyme.airline.api.requests.AddAirlineRequest
-import com.faroc.flyme.airline.api.responses.AirlinesResponse
-import com.faroc.flyme.airline.infrastructure.AirlineRepository
-import com.faroc.flyme.airline.domain.errors.AirlineNotFound
+import com.faroc.flyme.airlines.api.requests.AddAirlineRequest
+import com.faroc.flyme.airlines.api.responses.AirlinesResponse
+import com.faroc.flyme.airlines.domain.Airline
+import com.faroc.flyme.airlines.infrastructure.AirlineRepository
+import com.faroc.flyme.airlines.domain.errors.AirlineNotFound
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
@@ -25,8 +26,10 @@ import kotlin.test.Test
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration::class)
 class AirlineTests(
-    @Autowired val client: WebTestClient,
-    @Autowired val repository: AirlineRepository
+    @Autowired
+    val client: WebTestClient,
+    @Autowired
+    val repository: AirlineRepository
 ) {
 
     @BeforeEach
@@ -40,37 +43,26 @@ class AirlineTests(
     fun `when adding airlines to airport should add airlines`() {
         runBlocking {
             // given:
-            val requestBody = getTwoRecordsRequestBody()
-            val requestNames = getTwoRecordsRequestBody().map { rb -> rb.name }
-            val requestCountries = getTwoRecordsRequestBody().map { rb -> rb.country }
+            val requestBody = Airline("Bryanair", "Iceland")
 
             // when:
             val requestResult = client.post()
                 .uri("/v1/airlines")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(getTwoRecordsRequestBody()))
+                .body(BodyInserters.fromValue(requestBody))
                 .exchange()
                 .expectStatus().isCreated
-                .expectBodyList<AirlinesResponse>()
+                .expectBody<AirlinesResponse>()
                 .returnResult()
 
             // then:
-            val responseBody = requestResult.responseBody ?: listOf()
+            val responseBody = requestResult.responseBody
 
-            responseBody.size shouldBeEqualTo requestBody.size
-            repository.count() shouldBeEqualTo requestBody.size.toLong()
+            val id = responseBody?.id ?: -1
+            repository.existsById(id).shouldBeTrue()
 
-            responseBody.map { rb -> rb.id }.forEach {
-                i -> repository.existsById(i).shouldBeTrue()
-            }
-            val ids = responseBody.map { rb -> rb.id }
-            repository.deleteAllById(ids)
-
-            val responseNames = responseBody.map { rb -> rb.name }
-            responseNames shouldContainAll requestNames
-
-            val responseCountries = responseBody.map { rb -> rb.country }
-            responseCountries shouldContainAll requestCountries
+            responseBody?.name shouldBeEqualTo requestBody.name
+            responseBody?.country shouldBeEqualTo requestBody.country
         }
     }
 
@@ -78,10 +70,14 @@ class AirlineTests(
     fun `when fetching airlines from airport should return airlines`() {
         runBlocking {
             // given:
+            val requestBody = Airline("Bryanair", "Iceland")
+
+            val expectedAirlinesFetched = listOf(requestBody)
+
             client.post()
                 .uri("/v1/airlines") // Ensure to have the leading slash
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(getTwoRecordsRequestBody()))
+                .body(BodyInserters.fromValue(requestBody))
                 .exchange()
 
             // when:
@@ -94,13 +90,9 @@ class AirlineTests(
             val responseBody = fetchRequest.responseBody ?: listOf()
 
             // then:
-            responseBody.size shouldBeEqualTo getTwoRecordsRequestBody().size
-            responseBody.map { rb -> rb.name } shouldContainAll getTwoRecordsRequestBody().map { rb -> rb.name }
-            responseBody.map { rb -> rb.country } shouldContainAll getTwoRecordsRequestBody().map { rb -> rb.country }
-
-            // teardown
-            val ids = responseBody.map { rb -> rb.id }
-            repository.deleteAllById(ids)
+            responseBody.size shouldBeEqualTo expectedAirlinesFetched.size
+            responseBody.map { rb -> rb.name } shouldContainAll expectedAirlinesFetched.map { rb -> rb.name }
+            responseBody.map { rb -> rb.country } shouldContainAll expectedAirlinesFetched.map { rb -> rb.country }
         }
     }
 
@@ -128,16 +120,18 @@ class AirlineTests(
     fun `when fetching airline from airport should return airline`() {
         runBlocking {
             // given:
+            val requestBody = Airline("Bryanair", "Iceland")
+
             val result = client.post()
                 .uri("/v1/airlines")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(getOneRecordRequestBody()))
+                .body(BodyInserters.fromValue(requestBody))
                 .exchange()
-                .expectBodyList<AirlinesResponse>()
+                .expectBody<AirlinesResponse>()
                 .returnResult()
 
-            val airlineAdded = result.responseBody ?: listOf()
-            val airlineAddedId = airlineAdded.first().id
+            val airlineAdded = result.responseBody
+            val airlineAddedId = airlineAdded?.id ?: -1
 
             // when:
             val fetchRequest = client.get()
@@ -151,18 +145,5 @@ class AirlineTests(
             // then:
             responseBody?.id shouldBeEqualTo airlineAddedId
         }
-    }
-
-    private fun getTwoRecordsRequestBody() : List<AddAirlineRequest> {
-        return listOf(
-            AddAirlineRequest("Bryanair", "Iceland"),
-            AddAirlineRequest("Hardyjet", "England"),
-        )
-    }
-
-    private fun getOneRecordRequestBody() : List<AddAirlineRequest> {
-        return listOf(
-            AddAirlineRequest("Bryanair", "Iceland"),
-        )
     }
 }

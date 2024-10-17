@@ -1,21 +1,21 @@
 package com.faroc.flyme.common.api.middleware
 
-import org.springframework.validation.method.ParameterErrors
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import org.springframework.web.method.annotation.HandlerMethodValidationException
+import org.springframework.web.bind.support.WebExchangeBindException
 
 @RestControllerAdvice
 class ExceptionsHandler {
-    @ExceptionHandler(HandlerMethodValidationException::class)
-    fun handleValidation(ex: HandlerMethodValidationException): ValidationProblemDetail {
+
+    @ExceptionHandler(WebExchangeBindException::class)
+    fun handleValidation(ex: WebExchangeBindException): ValidationProblemDetail {
         val validationProblem = ValidationProblemDetail.create()
 
-        (ex.allValidationResults.firstOrNull() as ParameterErrors).fieldErrors.forEach { e ->
-            val field = e.field
-            val errorMessage = e.defaultMessage
+        ex.bindingResult.fieldErrors.forEach{ fieldError ->
+            val fieldName = fieldError.field
+            val errorMessage = fieldError.defaultMessage
 
-            validationProblem.addValidationError(field, errorMessage!!)
+            validationProblem.addValidationError(fieldName, errorMessage!!)
         }
 
         return validationProblem

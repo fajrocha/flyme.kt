@@ -1,10 +1,10 @@
-package com.faroc.flyme.airline.services
+package com.faroc.flyme.airlines.services
 
-import com.faroc.flyme.airline.domain.Airline
-import com.faroc.flyme.airline.domain.errors.AirlineNotFound
-import com.faroc.flyme.airline.infrastructure.AirlineRepository
-import com.faroc.flyme.airline.api.requests.AddAirlineRequest
-import com.faroc.flyme.airline.api.responses.AirlinesResponse
+import com.faroc.flyme.airlines.domain.errors.AirlineNotFound
+import com.faroc.flyme.airlines.infrastructure.AirlineRepository
+import com.faroc.flyme.airlines.api.requests.AddAirlineRequest
+import com.faroc.flyme.airlines.api.responses.AirlinesResponse
+import com.faroc.flyme.airlines.domain.Airline
 import com.faroc.flyme.common.api.errors.Error
 import com.faroc.flyme.common.api.errors.NotFoundError
 import com.github.michaelbull.result.Err
@@ -17,17 +17,14 @@ import org.springframework.stereotype.Service
 class AirlineService(
     private val airlineRepository: AirlineRepository
 ) {
+    suspend fun addAirline(airline: AddAirlineRequest): AirlinesResponse {
+        val (name, country) = airline
 
-    suspend fun addAirlines(airlines: List<AddAirlineRequest>): List<AirlinesResponse> {
-        val airlinesToAdd = airlines.map {
-            (name, country) -> Airline(name,country)
-        }
+        val airlinesToAdd = Airline(name, country)
 
-        val airlinesAdded = airlineRepository.saveAll(airlinesToAdd).toList()
+        val airlineAdded = airlineRepository.save(airlinesToAdd)
 
-        return airlinesAdded.map {
-            (name, country, id) -> AirlinesResponse(id!!, name, country)
-        }
+        return AirlinesResponse(airlineAdded.id!!, airlineAdded.name, airlineAdded.country)
     }
 
     suspend fun fetchAirlines(): List<AirlinesResponse> {
