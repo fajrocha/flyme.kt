@@ -15,15 +15,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class PlaneModelService(private val planeModelRepository: PlaneModelRepository) {
+    suspend fun addPlaneModel(planeModel: PlaneModelRequest) : PlaneModelResponse {
+        val (name, seats) = planeModel
+        val plane = PlaneModel(name, seats)
 
-    suspend fun addPlaneModels(planeModels: List<PlaneModelRequest>) : List<PlaneModelResponse> {
-        val planesToAdd = planeModels.map {
-            (name, seats) -> PlaneModel(name, seats)
-        }
+        val planeAdded = planeModelRepository.save(plane)
 
-        val planesAdded = planeModelRepository.saveAll(planesToAdd).toList()
-
-        return planesAdded.map { (name, seats, id) -> PlaneModelResponse(id!!, name, seats) }
+        return PlaneModelResponse(planeAdded.id!!, planeAdded.name, planeAdded.seats)
     }
 
     suspend fun fetchPlaneModels() : List<PlaneModelResponse> {

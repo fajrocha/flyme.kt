@@ -2,7 +2,7 @@ package com.faroc.flyme.planes.api.controllers.v1
 
 import com.faroc.flyme.airlines.api.responses.AirlinesResponse
 import com.faroc.flyme.common.api.errors.toProblem
-import com.faroc.flyme.common.api.middleware.ValidationProblemDetail
+import com.faroc.flyme.common.api.middleware.ValidationProblem
 import com.faroc.flyme.planes.api.requests.PlaneModelRequest
 import com.faroc.flyme.planes.api.responses.PlaneModelResponse
 import com.faroc.flyme.planes.services.PlaneModelService
@@ -45,7 +45,7 @@ class PlaneModelController(private val planeModelService: PlaneModelService) {
             description = "Invalid input. Errors property will contain fields which are wrong.",
             content = [(Content(
                 mediaType = "application/json",
-                schema = Schema(implementation = ValidationProblemDetail::class)
+                schema = Schema(implementation = ValidationProblem::class)
             ))
             ]),
         ApiResponse(
@@ -61,9 +61,9 @@ class PlaneModelController(private val planeModelService: PlaneModelService) {
     suspend fun addPlaneModels(
         @RequestBody
         @Valid
-        addPlaneModelsRequest: List<PlaneModelRequest>) : ResponseEntity<List<PlaneModelResponse>> {
+        addPlaneModelsRequest: PlaneModelRequest) : ResponseEntity<PlaneModelResponse> {
 
-        return ResponseEntity(planeModelService.addPlaneModels(addPlaneModelsRequest), HttpStatus.CREATED)
+        return ResponseEntity(planeModelService.addPlaneModel(addPlaneModelsRequest), HttpStatus.CREATED)
     }
 
     @Operation(summary = "Fetch plane models.", description = "Fetch plane models available on the platform.")

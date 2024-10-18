@@ -4,7 +4,7 @@ import com.faroc.flyme.airlines.api.requests.AddAirlineRequest
 import com.faroc.flyme.airlines.api.responses.AirlinesResponse
 import com.faroc.flyme.airlines.services.AirlineService
 import com.faroc.flyme.common.api.errors.toProblem
-import com.faroc.flyme.common.api.middleware.ValidationProblemDetail
+import com.faroc.flyme.common.api.middleware.ValidationProblem
 import com.github.michaelbull.result.fold
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.ArraySchema
@@ -38,7 +38,7 @@ class AirlineController(private val service: AirlineService) {
             description = "Invalid input. Errors property will contain fields which are wrong.",
             content = [(Content(
                 mediaType = "application/json",
-                schema = Schema(implementation = ValidationProblemDetail::class)))
+                schema = Schema(implementation = ValidationProblem::class)))
             ]),
         ApiResponse(
             responseCode = "500",

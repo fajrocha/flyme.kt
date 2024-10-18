@@ -8,8 +8,8 @@ import org.springframework.web.bind.support.WebExchangeBindException
 class ExceptionsHandler {
 
     @ExceptionHandler(WebExchangeBindException::class)
-    fun handleValidation(ex: WebExchangeBindException): ValidationProblemDetail {
-        val validationProblem = ValidationProblemDetail.create()
+    fun handleValidation(ex: WebExchangeBindException): ValidationProblem {
+        val validationProblem = ValidationProblem.create()
 
         ex.bindingResult.fieldErrors.forEach{ fieldError ->
             val fieldName = fieldError.field
