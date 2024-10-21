@@ -26,7 +26,7 @@ import org.springframework.web.reactive.function.BodyInserters
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration::class)
-class PlaneModelTests(
+class PlaneRequestModelTests(
     @Autowired
     val client: WebTestClient,
     @Autowired
@@ -42,7 +42,7 @@ class PlaneModelTests(
     fun `when adding plane models to platform should add plane models`() {
         runBlocking {
             // given:
-            val requestBody = PlaneModelRequest("Big Plane", 70)
+            val requestBody = PlaneModelRequest("Airbus 320", 70)
 
             // when:
             val requestResult = addPlaneModel(requestBody)
