@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration
 class OpenApiConfiguration {
     @Bean
     fun customOpenApi(): OpenAPI {
-        val title = "Flyme"
+        val title = "Flyme REST API"
 
         return OpenAPI().info(
             Info().title(title)

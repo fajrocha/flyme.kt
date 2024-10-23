@@ -7,7 +7,7 @@ import org.springframework.data.relational.core.mapping.Table
 @Table("plane")
 data class Plane(
     @Column("plane_model_id")
-    val planeModelId: Long,
+    val planeModel: Long,
     @Id
     @Column("plane_id")
     val id: Long? = null

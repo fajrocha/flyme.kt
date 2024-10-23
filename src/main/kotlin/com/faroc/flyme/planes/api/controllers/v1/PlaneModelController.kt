@@ -30,14 +30,14 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Plane Models")
 class PlaneModelController(private val planeModelService: PlaneModelService) {
 
-    @Operation(summary = "Add plane models.", description = "Add plane models available on the platform.")
+    @Operation(summary = "Add plane model.", description = "Add plane models available on the platform.")
     @ApiResponses(value = [
         ApiResponse(
             responseCode = "201",
-            description = "Added airlines.",
+            description = "Added plane model successfully.",
             content = [(Content(
                 mediaType = "application/json",
-                array = ArraySchema(schema = Schema(implementation = PlaneModelResponse::class))
+                schema = Schema(implementation = PlaneModelResponse::class)
             ))
             ]),
         ApiResponse(
@@ -117,8 +117,8 @@ class PlaneModelController(private val planeModelService: PlaneModelService) {
         val result = planeModelService.fetchPlaneModelById(planeModelId)
 
         return result.fold(
-            success = { ResponseEntity.ok(result.value) },
-            failure = { r -> r.toProblem() }
+            success = { planeModelResponse -> ResponseEntity.ok(planeModelResponse) },
+            failure = { err -> err.toProblem() }
         )
     }
 }

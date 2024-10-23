@@ -31,7 +31,7 @@ class AirlineController(private val service: AirlineService) {
             description = "Added airline.",
             content = [(Content(
                 mediaType = "application/json",
-                array = ArraySchema(schema = Schema(implementation = AirlinesResponse::class))))
+                schema = Schema(implementation = AirlinesResponse::class)))
             ]),
         ApiResponse(
             responseCode = "400",
@@ -50,7 +50,7 @@ class AirlineController(private val service: AirlineService) {
     ]
     )
     @PostMapping()
-    suspend fun addAirlines2(
+    suspend fun addAirlines(
         @RequestBody @Valid request: AddAirlineRequest) : ResponseEntity<AirlinesResponse> {
         return ResponseEntity(service.addAirline(request), HttpStatus.CREATED)
     }

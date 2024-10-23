@@ -7,18 +7,14 @@ import org.springframework.http.ResponseEntity
 sealed class Error(val errorType: ErrorTypes, val description: String? = null, val code: String? = null) {
 }
 
-fun Error.toProblem(): ResponseEntity<ProblemDetail> {
-    val statusCode = when (this.errorType) {
-        ErrorTypes.NOT_FOUND -> HttpStatus.NOT_FOUND
-        ErrorTypes.CONFLICT -> HttpStatus.CONFLICT
-    }
-    val problem = ProblemDetail.forStatusAndDetail(statusCode, this.description)
-
-    return ResponseEntity(problem, statusCode)
-}
-
 class NotFoundError(description: String? = null, code: String? = null) : Error(
     errorType = ErrorTypes.NOT_FOUND,
+    description = description,
+    code = code
+)
+
+class UnexpectedError(description: String? = null, code: String? = null) : Error(
+    errorType = ErrorTypes.UNEXPECTED,
     description = description,
     code = code
 )
@@ -29,7 +25,19 @@ class ConflictError(description: String? = null, code: String? = null) : Error(
     code = code
 )
 
+fun Error.toProblem(): ResponseEntity<ProblemDetail> {
+    val statusCode = when (this.errorType) {
+        ErrorTypes.NOT_FOUND -> HttpStatus.NOT_FOUND
+        ErrorTypes.CONFLICT -> HttpStatus.CONFLICT
+        ErrorTypes.UNEXPECTED -> HttpStatus.INTERNAL_SERVER_ERROR
+    }
+    val problem = ProblemDetail.forStatusAndDetail(statusCode, this.description)
+
+    return ResponseEntity(problem, statusCode)
+}
+
 enum class ErrorTypes {
     CONFLICT,
     NOT_FOUND,
+    UNEXPECTED,
 }

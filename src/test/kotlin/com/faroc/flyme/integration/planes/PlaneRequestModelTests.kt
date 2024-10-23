@@ -39,7 +39,7 @@ class PlaneRequestModelTests(
     }
 
     @Test
-    fun `when adding plane models to platform should add plane models`() {
+    fun `when adding plane model to platform should add plane model`() {
         runBlocking {
             // given:
             val requestBody = PlaneModelRequest("Airbus 320", 70)

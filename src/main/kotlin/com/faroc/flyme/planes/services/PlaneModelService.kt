@@ -21,7 +21,7 @@ class PlaneModelService(private val planeModelRepository: PlaneModelRepository) 
 
         val planeAdded = planeModelRepository.save(plane)
 
-        return PlaneModelResponse(planeAdded.id!!, planeAdded.name, planeAdded.seats)
+        return planeAdded.toResponse()
     }
 
     suspend fun fetchPlaneModels() : List<PlaneModelResponse> {
@@ -34,6 +34,10 @@ class PlaneModelService(private val planeModelRepository: PlaneModelRepository) 
         val planeFetched = planeModelRepository.findById(id)
             ?: return Err(NotFoundError(PlaneModelNotFound.DESCRIPTION, PlaneModelNotFound.CODE))
 
-        return Ok(PlaneModelResponse(planeFetched.id!!, planeFetched.name, planeFetched.seats))
+        return Ok(planeFetched.toResponse())
     }
+}
+
+fun PlaneModel.toResponse() : PlaneModelResponse {
+    return PlaneModelResponse(this.id!!, this.name, this.seats)
 }
