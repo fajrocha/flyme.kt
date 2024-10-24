@@ -3,13 +3,13 @@ package com.faroc.flyme.planes.services
 import com.faroc.flyme.common.api.errors.Error
 import com.faroc.flyme.common.api.errors.NotFoundError
 import com.faroc.flyme.common.api.requests.FetchPaginatedRequest
-import com.faroc.flyme.planes.api.requests.PlaneRequest
 import com.faroc.flyme.common.api.responses.PaginatedResponse
+import com.faroc.flyme.planes.api.requests.PlaneRequest
 import com.faroc.flyme.planes.api.responses.PlaneResponse
 import com.faroc.flyme.planes.domain.Plane
-import com.faroc.flyme.planes.domain.PlaneModel
 import com.faroc.flyme.planes.domain.errors.PlaneModelNotFound
 import com.faroc.flyme.planes.domain.errors.PlaneNotFound
+import com.faroc.flyme.planes.domain.toResponse
 import com.faroc.flyme.planes.infrastructure.PlaneModelRepository
 import com.faroc.flyme.planes.infrastructure.PlaneRepository
 import com.faroc.flyme.planes.views.toResponse
@@ -55,8 +55,4 @@ class PlaneService(
 
         return PaginatedResponse(planes, pageNumber, pageSize, totalElements)
     }
-}
-
-fun Plane.toResponse(planeModel: PlaneModel) : PlaneResponse {
-    return PlaneResponse(this.id!!, planeModel.toResponse())
 }

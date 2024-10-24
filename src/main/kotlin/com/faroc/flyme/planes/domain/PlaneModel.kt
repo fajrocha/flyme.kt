@@ -1,5 +1,6 @@
 package com.faroc.flyme.planes.domain
 
+import com.faroc.flyme.planes.api.responses.PlaneModelResponse
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
@@ -14,3 +15,7 @@ data class PlaneModel(
     @Column("plane_model_id")
     val id: Long? = null
 )
+
+fun PlaneModel.toResponse() : PlaneModelResponse {
+    return PlaneModelResponse(this.id!!, this.name, this.seats)
+}

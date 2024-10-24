@@ -1,5 +1,6 @@
 package com.faroc.flyme.airlines.domain
 
+import com.faroc.flyme.airlines.api.responses.AirlinesResponse
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
@@ -15,3 +16,6 @@ data class Airline(
     val id: Long? = null,
 )
 
+fun Airline.toResponse() : AirlinesResponse {
+    return AirlinesResponse(this.id!!, this.name, this.country)
+}
