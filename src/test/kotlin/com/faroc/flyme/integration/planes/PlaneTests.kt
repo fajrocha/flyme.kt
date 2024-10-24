@@ -2,6 +2,7 @@ package com.faroc.flyme.integration.planes
 
 import com.faroc.flyme.TestcontainersConfiguration
 import com.faroc.flyme.common.api.middleware.ValidationProblem
+import com.faroc.flyme.common.api.responses.PaginatedResponse
 import com.faroc.flyme.integration.planes.utils.PlaneModelRequestFactory
 import com.faroc.flyme.integration.planes.utils.PlaneRequestFactory
 import com.faroc.flyme.planes.api.requests.PlaneModelRequest
@@ -16,6 +17,8 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
@@ -132,7 +135,59 @@ class PlaneTests(
             val planeFetched = response.responseBody
                 ?: throw AssertionError("Plane fetched cannot be null.")
 
-            planeFetched.id shouldBeEqualTo planeAdded.id
+            planeFetched shouldBeEqualTo planeAdded
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [1, 2])
+    fun `when fetching existing planes should return paginated planes`(pageNumber: Int) {
+        runBlocking {
+            // given:
+            val totalItems = 10L
+            val pageSize = 5
+
+            val planeModel = PlaneModelRequestFactory.create()
+            addPlaneModel(planeModel).responseBody
+                ?: throw AssertionError("Plane model response cannot be null.")
+
+            val plane = PlaneRequestFactory.create(planeModel.name)
+
+            val listPlanesAdded = mutableListOf<PlaneResponse>()
+
+            for (i in 0..<totalItems) {
+                val planeAdded = addPlane(plane).responseBody
+                    ?: throw AssertionError("Plane response cannot be null.")
+                listPlanesAdded.add(planeAdded)
+            }
+
+            val paginatedPlanesAdded = listPlanesAdded.drop((pageNumber - 1) * pageSize).take(pageSize)
+
+            val expectedPlanesFetched = PaginatedResponse(
+                paginatedPlanesAdded,
+                pageNumber,
+                pageSize,
+                totalItems
+            )
+
+            // when:
+            val response = client.get()
+                .uri{ builder ->
+                    builder.path("v1/planes")
+                        .queryParam("pageNumber", pageNumber)
+                        .queryParam("pageSize", pageSize)
+                        .build()
+                }
+                .exchange()
+                .expectStatus().isOk
+                .expectBody<PaginatedResponse<PlaneResponse>>()
+                .returnResult()
+
+            // then:
+            val planesFetched = response.responseBody
+                ?: throw AssertionError("Plane fetched cannot be null.")
+
+            planesFetched shouldBeEqualTo expectedPlanesFetched
         }
     }
 

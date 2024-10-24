@@ -5,7 +5,6 @@ import com.faroc.flyme.common.api.middleware.ValidationProblem
 import com.faroc.flyme.common.api.requests.FetchPaginatedRequest
 import com.faroc.flyme.planes.api.requests.PlaneRequest
 import com.faroc.flyme.common.api.responses.PaginatedResponse
-import com.faroc.flyme.planes.api.responses.PlaneModelResponse
 import com.faroc.flyme.planes.api.responses.PlaneResponse
 import com.faroc.flyme.planes.services.PlaneService
 import com.github.michaelbull.result.fold
@@ -40,8 +39,7 @@ class PlaneController(
             description = "Added plane model successfully.",
             content = [(Content(
                 mediaType = "application/json",
-                schema = Schema(implementation = PlaneModelResponse::class)
-            ))
+                schema = Schema(implementation = PlaneResponse::class)))
             ]),
         ApiResponse(
             responseCode = "400",
@@ -71,8 +69,32 @@ class PlaneController(
         )
     }
 
+    @Operation(summary = "Fetch plane by id.", description = "Fetch plane by id.")
+    @ApiResponses(value = [
+        ApiResponse(
+            responseCode = "200",
+            description = "Fetched plane successfully.",
+            content = [(Content(
+                mediaType = "application/json",
+                schema = Schema(implementation = PlaneResponse::class)))
+            ]),
+        ApiResponse(
+            responseCode = "404",
+            description = "Plane requested not found.",
+            content = [(Content(
+                mediaType = "application/json",
+                schema = Schema(implementation = ProblemDetail::class)))
+            ]),
+        ApiResponse(
+            responseCode = "500",
+            description = "Failed to fetch plane due to internal error.",
+            content = [(Content(
+                mediaType = "application/json",
+                schema = Schema(implementation = ProblemDetail::class)))
+            ]),
+    ])
     @GetMapping("{id}")
-    suspend fun fetchPlan(@PathVariable id: Long) : ResponseEntity<*> {
+    suspend fun fetchPlane(@PathVariable id: Long) : ResponseEntity<*> {
         val result = planeService.fetchPlane(id)
 
         return result.fold(
@@ -81,8 +103,25 @@ class PlaneController(
         )
     }
 
+    @Operation(summary = "Fetch planes.", description = "Fetch planes.")
+    @ApiResponses(value = [
+        ApiResponse(
+            responseCode = "200",
+            description = "Fetched planes successfully.",
+            content = [(Content(
+                mediaType = "application/json",
+                schema = Schema(implementation = PaginatedResponse::class)))
+            ]),
+        ApiResponse(
+            responseCode = "500",
+            description = "Failed to fetch planes due to internal error.",
+            content = [(Content(
+                mediaType = "application/json",
+                schema = Schema(implementation = ProblemDetail::class)))
+            ]),
+    ])
     @GetMapping
-    suspend fun fetchPlan(
+    suspend fun fetchPlanes(
         @RequestParam("pageNumber", defaultValue = "1") pageNumber: Int,
         @RequestParam("pageSize", defaultValue = "5") pageSize: Int) : PaginatedResponse<PlaneResponse> {
 
