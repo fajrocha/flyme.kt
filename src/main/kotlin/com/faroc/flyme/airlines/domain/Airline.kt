@@ -1,16 +1,17 @@
-package com.faroc.flyme.planes.domain
+package com.faroc.flyme.airlines.domain
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
-@Table("plane_model")
-data class PlaneModel(
+@Table("airline")
+data class Airline(
     @Column("name")
     val name: String,
-    @Column("seats")
-    val seats: Short,
+    @Column("country")
+    val country: String,
     @Id
-    @Column("plane_model_id")
-    val id: Long? = null
+    @Column("airline_id")
+    val id: Long? = null,
 )
+
