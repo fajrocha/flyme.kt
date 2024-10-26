@@ -2,6 +2,7 @@ package com.faroc.flyme.integration.planes
 
 import com.faroc.flyme.TestcontainersConfiguration
 import com.faroc.flyme.common.api.middleware.ValidationProblem
+import com.faroc.flyme.integration.planes.utils.PlaneModelRequestFactory
 import com.faroc.flyme.planes.api.requests.PlaneModelRequest
 import com.faroc.flyme.planes.api.responses.PlaneModelResponse
 import com.faroc.flyme.planes.domain.errors.PlaneModelNotFound
@@ -23,10 +24,13 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.reactive.function.BodyInserters
 
+const val ADD_PLANE_MODEL_URI = "v1/plane-model"
+const val FETCH_PLANE_MODELS_URI = "v1/plane-model"
 
+@OptIn(ExperimentalStdlibApi::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration::class)
-class PlaneRequestModelTests(
+class PlaneModelTests(
     @Autowired
     val client: WebTestClient,
     @Autowired
@@ -42,19 +46,17 @@ class PlaneRequestModelTests(
     fun `when adding plane model to platform should add plane model`() {
         runBlocking {
             // given:
-            val requestBody = PlaneModelRequest("Airbus 320", 70)
+            val addPlaneModelRequest = PlaneModelRequestFactory.create()
 
             // when:
-            val requestResult = addPlaneModel(requestBody)
+            val addPlaneModelResponse = addPlaneModel(addPlaneModelRequest)
 
             // then:
-            val responseBody = requestResult.responseBody
+            val planeModelAdded = addPlaneModelResponse.responseBody
+                ?: throw AssertionError("Response body should not be null when adding plane model.")
 
-            responseBody?.name shouldBeEqualTo requestBody.name
-            responseBody?.seats shouldBeEqualTo requestBody.seats
-
-            val planeModelAddedId = responseBody?.id ?: -1
-            repository.existsById(planeModelAddedId).shouldBeTrue()
+            addPlaneModelRequest.shouldBeEquivalentTo(planeModelAdded)
+            repository.existsById(planeModelAdded.id).shouldBeTrue()
         }
     }
 
@@ -63,14 +65,17 @@ class PlaneRequestModelTests(
         "-1, 'Seats must be higher than 0.'",
         "2001, 'Seats must be lower than 2000.'"
     )
-    fun `when adding invalid plane model to platform should return bad request`(seats: Short, seatsValidationError: String) {
+    fun `when adding invalid plane model to platform should return bad request`(
+        seats: Short,
+        seatsValidationError: String,
+    ) {
         runBlocking {
             // given:
-            val requestBody = PlaneModelRequest("", 2001)
+            val requestBody = PlaneModelRequestFactory.create("", seats)
 
             // when:
             val requestResult = client.post()
-                .uri("v1/plane-model")
+                .uri(ADD_PLANE_MODEL_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(requestBody))
                 .exchange()
@@ -85,44 +90,13 @@ class PlaneRequestModelTests(
             responseBody.detail shouldBeEqualTo ValidationProblem.DETAIL
             responseBody.errors.shouldNotBeEmpty()
 
-            val nameKey = "name"
-            responseBody.errors.containsKey(nameKey).shouldBeTrue()
-            responseBody.errors[nameKey]?.shouldContainAll(
+            responseBody.errors["name"]?.shouldContainAll(
                 arrayOf(
                     "Name should not be blank or omitted.",
                     "Name must be between 1 and 50 characters.")
             )
 
-            val seatsKey = "seats"
-            responseBody.errors.containsKey(seatsKey).shouldBeTrue()
-            responseBody.errors[seatsKey]?.shouldContain("Seats must be lower than 2000.")
-        }
-    }
-
-    @Test
-    fun `when fetching plane models should return plane models`() {
-        runBlocking {
-            // given:
-            val requestBody = PlaneModelRequest("Big Plane", 70)
-            val expectedResponseBody = listOf(requestBody)
-
-            addPlaneModel(requestBody)
-
-            // when:
-            val requestResult = client.get()
-                .uri("v1/plane-model")
-                .exchange()
-                .expectStatus().isOk
-                .expectBodyList<PlaneModelResponse>()
-                .returnResult()
-
-            // then:
-            val responseBody = requestResult.responseBody
-                ?: throw AssertionError("Response body should not be null.")
-
-            responseBody.size shouldBeEqualTo expectedResponseBody.size
-            responseBody.map { rb -> rb.name  } shouldContainAll expectedResponseBody.map { erb -> erb.name }
-            responseBody.map { rb -> rb.seats  } shouldContainAll expectedResponseBody.map { erb -> erb.seats }
+            responseBody.errors["seats"]?.shouldContain(seatsValidationError)
         }
     }
 
@@ -134,7 +108,7 @@ class PlaneRequestModelTests(
 
             // when:
             val requestResult = client.get()
-                .uri("v1/plane-model/$planeModelId")
+                .uri(fetchPlaneModel(planeModelId))
                 .exchange()
                 .expectStatus().isNotFound
                 .expectBody<ProblemDetail>()
@@ -152,17 +126,17 @@ class PlaneRequestModelTests(
     fun `when fetching plane model by id should return plane model`() {
         runBlocking {
             // given:
-            val requestBody = PlaneModelRequest("Big Plane", 70)
+            val requestBody = PlaneModelRequestFactory.create()
             val planeModelAddedResponse = addPlaneModel(requestBody)
 
             val planeModelAdded = planeModelAddedResponse.responseBody
-                ?: throw AssertionError("Response body should not be null.")
+                ?: throw AssertionError("Response body when adding plane model should not be null.")
 
             val planeModelId = planeModelAdded.id
 
             // when:
             val requestResult = client.get()
-                .uri("v1/plane-model/$planeModelId")
+                .uri(fetchPlaneModel(planeModelId))
                 .exchange()
                 .expectStatus().isOk
                 .expectBody<PlaneModelResponse>()
@@ -172,18 +146,48 @@ class PlaneRequestModelTests(
             val planeModelFetched = requestResult.responseBody
                 ?: throw AssertionError("Response body should not be null.")
 
-            planeModelFetched.shouldBeEqualTo(planeModelAdded)
+            planeModelFetched.shouldBeEquivalentTo(planeModelAdded)
+        }
+    }
+
+    @Test
+    fun `when fetching plane models should return plane models`() {
+        runBlocking {
+            // given:
+            val addPlaneModelRequest = PlaneModelRequestFactory.create()
+
+            val addedPlaneModel = addPlaneModel(addPlaneModelRequest).responseBody
+                ?: throw AssertionError("Response body when adding plane model should not be null.")
+            val expectedPlaneModelsFetched = listOf(addedPlaneModel)
+
+            // when:
+            val requestResult = client.get()
+                .uri(FETCH_PLANE_MODELS_URI)
+                .exchange()
+                .expectStatus().isOk
+                .expectBodyList<PlaneModelResponse>()
+                .returnResult()
+
+            // then:
+            val fetchedPlaneModels = requestResult.responseBody
+                ?: throw AssertionError("Response body should not be null.")
+
+            fetchedPlaneModels.shouldBeEquivalentTo(expectedPlaneModelsFetched)
         }
     }
 
     private fun addPlaneModel(requestBody: PlaneModelRequest) : EntityExchangeResult<PlaneModelResponse> {
         return client.post()
-            .uri("v1/plane-model")
+            .uri(ADD_PLANE_MODEL_URI)
             .contentType(MediaType.APPLICATION_JSON)
             .body(BodyInserters.fromValue(requestBody))
             .exchange()
             .expectStatus().isCreated
             .expectBody<PlaneModelResponse>()
             .returnResult()
+    }
+
+    private fun fetchPlaneModel(id: Long) : String {
+        return "$FETCH_PLANE_MODELS_URI/$id"
     }
 }

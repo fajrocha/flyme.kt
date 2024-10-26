@@ -24,7 +24,7 @@ class AirportService(private val airportRepository: AirportRepository) {
     @Transactional
     suspend fun addAirport(airportRequest: AirportRequest) : Result<AirportResponse, Error> {
         if (airportRepository.existsByIataCode(airportRequest.iataCode))
-            return Err(ConflictError(AirportConflictIataCode.DESCRIPTION, AirportConflictIataCode.DESCRIPTION))
+            return Err(ConflictError(AirportConflictIataCode.DESCRIPTION, AirportConflictIataCode.CODE))
 
         val airportAdded = airportRepository.save(airportRequest.toDomain())
 
