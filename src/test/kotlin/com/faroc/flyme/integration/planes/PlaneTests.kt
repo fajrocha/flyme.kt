@@ -30,6 +30,9 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.web.reactive.function.BodyInserters
 import kotlin.test.Test
 
+const val ADD_PLANE_URI = "v1/planes"
+const val FETCH_PLANES_URI = "v1/planes"
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration::class)
 class PlaneTests(
@@ -54,7 +57,7 @@ class PlaneTests(
             val plane = PlaneRequestFactory.create("")
 
             val response = client.post()
-                .uri("v1/planes")
+                .uri(ADD_PLANE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(plane))
                 .exchange()
@@ -81,7 +84,7 @@ class PlaneTests(
             val plane = PlaneRequestFactory.create("Airbus 320")
 
             val response = client.post()
-                .uri("v1/planes")
+                .uri(ADD_PLANE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(plane))
                 .exchange()
@@ -173,7 +176,7 @@ class PlaneTests(
             // when:
             val response = client.get()
                 .uri{ builder ->
-                    builder.path("v1/planes")
+                    builder.path(FETCH_PLANES_URI)
                         .queryParam("pageNumber", pageNumber)
                         .queryParam("pageSize", pageSize)
                         .build()
@@ -193,7 +196,7 @@ class PlaneTests(
 
     private fun addPlane(requestBody: PlaneRequest) : EntityExchangeResult<PlaneResponse> {
         return client.post()
-            .uri("v1/planes")
+            .uri(ADD_PLANE_URI)
             .contentType(MediaType.APPLICATION_JSON)
             .body(BodyInserters.fromValue(requestBody))
             .exchange()
@@ -204,7 +207,7 @@ class PlaneTests(
 
     private fun addPlaneModel(requestBody: PlaneModelRequest) : EntityExchangeResult<PlaneModelResponse> {
         return client.post()
-            .uri("v1/plane-model")
+            .uri(ADD_PLANE_MODEL_URI)
             .contentType(MediaType.APPLICATION_JSON)
             .body(BodyInserters.fromValue(requestBody))
             .exchange()

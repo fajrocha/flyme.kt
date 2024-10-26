@@ -1,11 +1,10 @@
 package com.faroc.flyme.integration.airlines
 
 import com.faroc.flyme.TestcontainersConfiguration
-import com.faroc.flyme.airlines.api.requests.AddAirlineRequest
 import com.faroc.flyme.airlines.api.responses.AirlinesResponse
-import com.faroc.flyme.airlines.domain.Airline
 import com.faroc.flyme.airlines.infrastructure.AirlineRepository
 import com.faroc.flyme.airlines.domain.errors.AirlineNotFound
+import com.faroc.flyme.integration.airlines.utils.AirlineTestsFactory
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
@@ -22,6 +21,8 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.reactive.function.BodyInserters
 import kotlin.test.Test
 
+const val ADD_AIRLINE_URI = "v1/airlines"
+const val FETCH_AIRLINE_URI = "v1/airlines"
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration::class)
@@ -43,11 +44,11 @@ class AirlineTests(
     fun `when adding airlines to airport should add airlines`() {
         runBlocking {
             // given:
-            val requestBody = Airline("Bryanair", "Iceland")
+            val requestBody = AirlineTestsFactory.createAddRequest()
 
             // when:
             val requestResult = client.post()
-                .uri("/v1/airlines")
+                .uri(ADD_AIRLINE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(requestBody))
                 .exchange()
@@ -70,19 +71,19 @@ class AirlineTests(
     fun `when fetching airlines from airport should return airlines`() {
         runBlocking {
             // given:
-            val requestBody = Airline("Bryanair", "Iceland")
+            val requestBody = AirlineTestsFactory.createAddRequest()
 
             val expectedAirlinesFetched = listOf(requestBody)
 
             client.post()
-                .uri("/v1/airlines") // Ensure to have the leading slash
+                .uri(ADD_AIRLINE_URI) // Ensure to have the leading slash
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(requestBody))
                 .exchange()
 
             // when:
             val fetchRequest = client.get()
-                .uri("/v1/airlines")
+                .uri(FETCH_AIRLINE_URI)
                 .exchange()
                 .expectStatus().isOk
                 .expectBodyList<AirlinesResponse>()
@@ -104,7 +105,7 @@ class AirlineTests(
 
             // when:
             val fetchRequest = client.get()
-                .uri("/v1/airlines/$airlineId")
+                .uri(fetchAirlineURI(airlineId))
                 .exchange()
                 .expectStatus().isNotFound
                 .expectBody<ProblemDetail>()
@@ -120,10 +121,10 @@ class AirlineTests(
     fun `when fetching airline from airport should return airline`() {
         runBlocking {
             // given:
-            val requestBody = Airline("Bryanair", "Iceland")
+            val requestBody = AirlineTestsFactory.createAddRequest()
 
             val result = client.post()
-                .uri("/v1/airlines")
+                .uri(ADD_AIRLINE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(requestBody))
                 .exchange()
@@ -135,7 +136,7 @@ class AirlineTests(
 
             // when:
             val fetchRequest = client.get()
-                .uri("/v1/airlines/$airlineAddedId")
+                .uri(fetchAirlineURI(airlineAddedId))
                 .exchange()
                 .expectStatus().isOk
                 .expectBody<AirlinesResponse>()
@@ -145,5 +146,9 @@ class AirlineTests(
             // then:
             responseBody?.id shouldBeEqualTo airlineAddedId
         }
+    }
+
+    private fun fetchAirlineURI(id: Long) : String {
+        return "$FETCH_AIRLINE_URI/$id"
     }
 }

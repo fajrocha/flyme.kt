@@ -24,7 +24,7 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import kotlin.test.Test
 
-const val POST_REQUEST_URI = "v1/airports"
+const val ADD_AIRPORT_URI = "v1/airports"
 const val FETCH_AIRPORTS_REQUEST_URI = "v1/airports"
 
 @OptIn(ExperimentalStdlibApi::class)
@@ -53,7 +53,7 @@ class AirportTests(
 
             // when:
             val responseAdd = client.post()
-                    .uri(POST_REQUEST_URI)
+                    .uri(ADD_AIRPORT_URI)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .exchange()
@@ -83,7 +83,7 @@ class AirportTests(
 
             // when:
             val badRequestResponse = client.post()
-                .uri(POST_REQUEST_URI)
+                .uri(ADD_AIRPORT_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(addAirportRequest)
                 .exchange()
@@ -219,7 +219,7 @@ class AirportTests(
 
     private fun addAirport(requestBody: AirportRequest) : EntityExchangeResult<AirportResponse> {
         return client.post()
-                .uri(POST_REQUEST_URI)
+                .uri(ADD_AIRPORT_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .exchange()
