@@ -24,18 +24,18 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("v1/airlines")
 @Tag(name = "Airlines")
 class AirlineController(private val service: AirlineService) {
-    @Operation(summary = "Add airline.", description = "Add airline to platform")
+    @Operation(summary = "Add airline.", description = "Add airline to the platform")
     @ApiResponses(value = [
         ApiResponse(
             responseCode = "201",
             description = "Added airline.",
             content = [(Content(
                 mediaType = "application/json",
-                schema = Schema(implementation = AirlinesResponse::class)))
-            ]),
+                schema = Schema(implementation = AirlinesResponse::class)))]
+        ),
         ApiResponse(
             responseCode = "400",
-            description = "Invalid input. Errors property will contain fields which are wrong.",
+            description = "Invalid input on request. Errors property will contain fields which are wrong.",
             content = [(Content(
                 mediaType = "application/json",
                 schema = Schema(implementation = ValidationProblem::class)))
@@ -47,8 +47,7 @@ class AirlineController(private val service: AirlineService) {
                 mediaType = "application/json",
                 schema = Schema(implementation = ProblemDetail::class)))
             ]),
-    ]
-    )
+    ])
     @PostMapping()
     suspend fun addAirlines(
         @RequestBody @Valid request: AddAirlineRequest) : ResponseEntity<AirlinesResponse> {

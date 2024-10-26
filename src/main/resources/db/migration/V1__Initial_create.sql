@@ -8,7 +8,7 @@ create table if not exists "airline"
 create table if not exists "airport"
 (
     "airport_id" bigserial constraint "pk_airport" primary key,
-    "IATA_code" char(3) not null,
+    "iata_code" char(3) not null,
     "name" text not null,
     "city" text not null,
     "country" text not null

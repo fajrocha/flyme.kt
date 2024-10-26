@@ -3,9 +3,8 @@ package com.faroc.flyme.common.api.middleware
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 
-class ValidationProblem : ProblemDetail() {
-
-    val errors: MutableMap<String, MutableList<String>> = HashMap()
+class ValidationProblem private constructor() : ProblemDetail() {
+    val errors: MutableMap<String, MutableList<String>> = mutableMapOf()
 
     fun addValidationError(key: String, value: String) {
         errors.getOrPut(key) { mutableListOf() }.add(value)

@@ -1,5 +1,6 @@
 package com.faroc.flyme.planes.api.requests
 
+import com.faroc.flyme.planes.domain.PlaneModel
 import jakarta.validation.constraints.*
 
 data class PlaneModelRequest(
@@ -11,3 +12,7 @@ data class PlaneModelRequest(
     @field:Max(message = "Seats must be lower than 2000.", value = 2000)
     val seats: Short
 )
+
+fun PlaneModelRequest.toDomain() : PlaneModel {
+    return PlaneModel(this.name, this.seats)
+}
