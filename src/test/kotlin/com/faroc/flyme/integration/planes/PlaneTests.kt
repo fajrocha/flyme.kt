@@ -27,7 +27,6 @@ import org.springframework.http.ProblemDetail
 import org.springframework.test.web.reactive.server.EntityExchangeResult
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.web.reactive.function.BodyInserters
 import kotlin.test.Test
 
 const val ADD_PLANE_URI = "v1/planes"
@@ -59,7 +58,7 @@ class PlaneTests(
             val response = client.post()
                 .uri(ADD_PLANE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(plane))
+                .bodyValue(plane)
                 .exchange()
                 .expectStatus().isBadRequest
                 .expectBody<ValidationProblem>()
@@ -86,7 +85,7 @@ class PlaneTests(
             val response = client.post()
                 .uri(ADD_PLANE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(plane))
+                .bodyValue(plane)
                 .exchange()
                 .expectStatus().isNotFound
                 .expectBody<ProblemDetail>()
@@ -198,7 +197,7 @@ class PlaneTests(
         return client.post()
             .uri(ADD_PLANE_URI)
             .contentType(MediaType.APPLICATION_JSON)
-            .body(BodyInserters.fromValue(requestBody))
+            .bodyValue(requestBody)
             .exchange()
             .expectStatus().isCreated
             .expectBody<PlaneResponse>()
@@ -209,7 +208,7 @@ class PlaneTests(
         return client.post()
             .uri(ADD_PLANE_MODEL_URI)
             .contentType(MediaType.APPLICATION_JSON)
-            .body(BodyInserters.fromValue(requestBody))
+            .bodyValue(requestBody)
             .exchange()
             .expectStatus().isCreated
             .expectBody<PlaneModelResponse>()

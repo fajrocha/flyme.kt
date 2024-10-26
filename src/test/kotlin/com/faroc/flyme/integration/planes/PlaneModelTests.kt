@@ -22,7 +22,6 @@ import org.springframework.test.web.reactive.server.EntityExchangeResult
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
-import org.springframework.web.reactive.function.BodyInserters
 
 const val ADD_PLANE_MODEL_URI = "v1/plane-model"
 const val FETCH_PLANE_MODELS_URI = "v1/plane-model"
@@ -77,7 +76,7 @@ class PlaneModelTests(
             val requestResult = client.post()
                 .uri(ADD_PLANE_MODEL_URI)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(requestBody))
+                .bodyValue(requestBody)
                 .exchange()
                 .expectStatus().isBadRequest
                 .expectBody<ValidationProblem>()
@@ -180,7 +179,7 @@ class PlaneModelTests(
         return client.post()
             .uri(ADD_PLANE_MODEL_URI)
             .contentType(MediaType.APPLICATION_JSON)
-            .body(BodyInserters.fromValue(requestBody))
+            .bodyValue(requestBody)
             .exchange()
             .expectStatus().isCreated
             .expectBody<PlaneModelResponse>()

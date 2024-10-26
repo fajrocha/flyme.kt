@@ -18,7 +18,6 @@ import org.springframework.http.ProblemDetail
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
-import org.springframework.web.reactive.function.BodyInserters
 import kotlin.test.Test
 
 const val ADD_AIRLINE_URI = "v1/airlines"
@@ -50,7 +49,7 @@ class AirlineTests(
             val requestResult = client.post()
                 .uri(ADD_AIRLINE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(requestBody))
+                .bodyValue(requestBody)
                 .exchange()
                 .expectStatus().isCreated
                 .expectBody<AirlinesResponse>()
@@ -78,7 +77,7 @@ class AirlineTests(
             client.post()
                 .uri(ADD_AIRLINE_URI) // Ensure to have the leading slash
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(requestBody))
+                .bodyValue(requestBody)
                 .exchange()
 
             // when:
@@ -126,7 +125,7 @@ class AirlineTests(
             val result = client.post()
                 .uri(ADD_AIRLINE_URI)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(requestBody))
+                .bodyValue(requestBody)
                 .exchange()
                 .expectBody<AirlinesResponse>()
                 .returnResult()
