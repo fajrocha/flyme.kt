@@ -5,4 +5,5 @@ import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 
 interface AirportRepository : CoroutineCrudRepository<Airport, Long> {
     suspend fun existsByIataCode(iataCode: String): Boolean
+    suspend fun findByIataCode(iataCode: String): Airport?
 }
