@@ -17,8 +17,11 @@ data class AirportRequest(
     @field:NotBlank(message = "Country should not be blank or omitted.")
     @field:Size(message = "Country must be between 1 and 50 characters.", min = 1, max = 50)
     val country: String,
+    @field:NotBlank(message = "Continent should not be blank or omitted.")
+    @field:Size(message = "Continent must be between 1 and 50 characters.", min = 1, max = 50)
+    val continent: String,
 )
 
 fun AirportRequest.toDomain() : Airport {
-    return Airport.create(this.iataCode, this.name, this.city, this.country)
+    return Airport.create(this.iataCode, this.name, this.city, this.country, this.continent)
 }
