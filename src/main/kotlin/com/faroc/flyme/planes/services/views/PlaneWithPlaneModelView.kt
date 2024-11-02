@@ -1,4 +1,4 @@
-package com.faroc.flyme.planes.views
+package com.faroc.flyme.planes.services.views
 
 import com.faroc.flyme.planes.api.responses.PlaneModelResponse
 import com.faroc.flyme.planes.api.responses.PlaneResponse

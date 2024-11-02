@@ -12,7 +12,7 @@ create table if not exists "airport"
     "name" text not null,
     "city" text not null,
     "country" text not null,
-    "continent" text not null
+    "time_zone" text not null
 );
 
 create table if not exists "plane_model"
@@ -41,7 +41,7 @@ create table if not exists "flight"
         constraint "fk_flight_plane" references plane(plane_id),
     "airline_id" bigint not null
         constraint "fk_flight_airline" references airline(airline_id),
-    "duration" interval not null,
+    "duration" integer not null,
     "departure_time" timestamptz not null,
     "arrival_time" timestamptz not null
 );

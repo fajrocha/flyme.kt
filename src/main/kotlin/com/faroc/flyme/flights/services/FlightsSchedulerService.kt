@@ -8,26 +8,29 @@ import com.faroc.flyme.common.api.errors.NotFoundError
 import com.faroc.flyme.flights.api.requests.ScheduleFlightRequest
 import com.faroc.flyme.flights.api.responses.ScheduleFlightResponse
 import com.faroc.flyme.flights.domain.Flight
+import com.faroc.flyme.flights.domain.FlightAirportDetails
+import com.faroc.flyme.flights.domain.FlightAirportsDetails
 import com.faroc.flyme.flights.domain.errors.FlightDepartAirportNotFound
 import com.faroc.flyme.flights.domain.toResponse
-import com.faroc.flyme.flights.infrastructure.airportgap.responses.toFlightAirportsDetails
 import com.faroc.flyme.flights.infrastructure.repositories.FlightRepository
-import com.faroc.flyme.flights.services.abstractions.DistanceService
+import com.faroc.flyme.flights.services.abstractions.AirportDataService
 import com.faroc.flyme.planes.domain.errors.PlaneNotFound
 import com.faroc.flyme.planes.infrastructure.PlaneRepository
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 
 @Service
-class FlightService(
+class FlightsSchedulerService(
     private val airportRepository: AirportRepository,
     private val planeRepository: PlaneRepository,
     private val airlineRepository: AirlineRepository,
-    private val distanceService: DistanceService,
+    private val airportDataService: AirportDataService,
     private val flightRepository: FlightRepository,
 ) {
+    @Transactional
     suspend fun scheduleFlight(scheduleFlightRequest: ScheduleFlightRequest) : Result<ScheduleFlightResponse, Error> {
         val (
             departureIataCode,
@@ -49,19 +52,28 @@ class FlightService(
         val airline = airlineRepository.findByName(airlineName)
             ?: return Err(NotFoundError(AirlineNotFound.DESCRIPTION, AirlineNotFound.CODE))
 
-        val airportsReport = distanceService.fetchDistanceBetweenAirports(departureIataCode, arrivalIataCode)
+        val airportsDistanceData = airportDataService.fetchDistanceBetweenAirports(
+            departureIataCode,
+            arrivalIataCode
+        )
 
-        val flight = Flight.create(
+        val flightDetails = FlightAirportsDetails(
+            airportsDistanceData.data.attributes.kilometers,
+            FlightAirportDetails(departureAirport.timeZone),
+            FlightAirportDetails(arrivalAirport.timeZone)
+        )
+
+        val flightToSchedule = Flight.create(
             departureAirport.id!!,
             arrivalAirport.id!!,
             flightPlane,
             airline.id!!,
             departureTime,
-            airportsReport.data.attributes.toFlightAirportsDetails()
+            flightDetails
         )
 
-        flightRepository.save(flight)
+        val flightScheduled = flightRepository.save(flightToSchedule)
 
-        return Ok(flight.toResponse())
+        return Ok(flightScheduled.toResponse())
     }
 }

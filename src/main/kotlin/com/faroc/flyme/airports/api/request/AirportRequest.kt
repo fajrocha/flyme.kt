@@ -1,6 +1,5 @@
 package com.faroc.flyme.airports.api.request
 
-import com.faroc.flyme.airports.domain.Airport
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
@@ -16,12 +15,5 @@ data class AirportRequest(
     val city: String,
     @field:NotBlank(message = "Country should not be blank or omitted.")
     @field:Size(message = "Country must be between 1 and 50 characters.", min = 1, max = 50)
-    val country: String,
-    @field:NotBlank(message = "Continent should not be blank or omitted.")
-    @field:Size(message = "Continent must be between 1 and 50 characters.", min = 1, max = 50)
-    val continent: String,
+    val country: String
 )
-
-fun AirportRequest.toDomain() : Airport {
-    return Airport.create(this.iataCode, this.name, this.city, this.country, this.continent)
-}

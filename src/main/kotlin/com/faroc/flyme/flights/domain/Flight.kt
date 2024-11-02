@@ -1,7 +1,8 @@
 package com.faroc.flyme.flights.domain
 
+import com.faroc.flyme.common.domain.secondsToFormattedDuration
 import com.faroc.flyme.flights.api.responses.ScheduleFlightResponse
-import com.faroc.flyme.planes.views.FlightPlaneView
+import com.faroc.flyme.planes.services.views.FlightPlaneView
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
@@ -25,7 +26,7 @@ class Flight private constructor(
     @Column("airline_id")
     val airline: Long,
     @Column("duration")
-    val duration: Duration,
+    val duration: Int,
     @Column("departure_time")
     val departureTime: ZonedDateTime,
     @Column("arrival_time")
@@ -45,7 +46,7 @@ class Flight private constructor(
             id: Long? = null,
             ) : Flight {
 
-            val durationHours = flightAirportsDetails.distance.toFlightDistance(plane.avgSpeed)
+            val duration = flightAirportsDetails.distance.toFlightDistance(plane.avgSpeed)
 
             val zonedDepartureTime = ZonedDateTime.of(
                 departureTime,
@@ -53,7 +54,7 @@ class Flight private constructor(
             )
 
             val zonedArrivalTime = departureTime.calculateArrivalTime(
-                durationHours,
+                duration,
                 flightAirportsDetails.arrivalAirportDetails.timezone
             )
 
@@ -62,7 +63,7 @@ class Flight private constructor(
                 airportArrival,
                 plane.planeId,
                 airline,
-                durationHours,
+                duration.inWholeSeconds.toInt(),
                 zonedDepartureTime,
                 zonedArrivalTime,
                 id,
@@ -72,11 +73,7 @@ class Flight private constructor(
 }
 
 fun Flight.toResponse(): ScheduleFlightResponse {
-    val hours = this.duration.inWholeHours
-    val minutes = this.duration.inWholeMinutes % 60
-    val seconds = this.duration.inWholeSeconds % 60
-
-    val durationFormatted = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    val duration = this.duration.secondsToFormattedDuration()
 
     return ScheduleFlightResponse(
         this.id!!,
@@ -84,7 +81,7 @@ fun Flight.toResponse(): ScheduleFlightResponse {
         this.airportDeparture,
         this.plane,
         this.airline,
-        durationFormatted,
+        duration,
         this.departureTime,
         this.arrivalTime)
 }
@@ -102,3 +99,5 @@ fun LocalDateTime.calculateArrivalTime(flightDuration: Duration, timeZone :Strin
         ZoneId.of(timeZone)
     )
 }
+
+

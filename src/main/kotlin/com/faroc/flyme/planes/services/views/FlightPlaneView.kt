@@ -1,4 +1,4 @@
-package com.faroc.flyme.planes.views
+package com.faroc.flyme.planes.services.views
 
 data class FlightPlaneView(
     val planeId: Long,

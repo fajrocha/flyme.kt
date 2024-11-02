@@ -12,7 +12,7 @@ import com.faroc.flyme.planes.domain.errors.PlaneNotFound
 import com.faroc.flyme.planes.domain.toResponse
 import com.faroc.flyme.planes.infrastructure.PlaneModelRepository
 import com.faroc.flyme.planes.infrastructure.PlaneRepository
-import com.faroc.flyme.planes.views.toResponse
+import com.faroc.flyme.planes.services.views.toResponse
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result

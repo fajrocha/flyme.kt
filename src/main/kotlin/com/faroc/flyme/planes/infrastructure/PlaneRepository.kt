@@ -1,8 +1,8 @@
 package com.faroc.flyme.planes.infrastructure
 
 import com.faroc.flyme.planes.domain.Plane
-import com.faroc.flyme.planes.views.PlaneWithPlaneModelView
-import com.faroc.flyme.planes.views.FlightPlaneView
+import com.faroc.flyme.planes.services.views.FlightPlaneView
+import com.faroc.flyme.planes.services.views.PlaneWithPlaneModelView
 import kotlinx.coroutines.flow.Flow
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository

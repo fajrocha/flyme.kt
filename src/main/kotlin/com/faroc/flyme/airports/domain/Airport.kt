@@ -15,8 +15,8 @@ class Airport private constructor(
     val city: String,
     @Column("country")
     val country: String,
-    @Column("continent")
-    val continent: String,
+    @Column("time_zone")
+    val timeZone: String,
     @Id
     @Column("airport_id")
     val id: Long? = null,
@@ -27,10 +27,10 @@ class Airport private constructor(
             name: String,
             city: String,
             country: String,
-            continent: String,
+            timeZone: String,
             id: Long? = null
         ) : Airport {
-            return Airport(iataCode.uppercase(), name, city, country, continent, id)
+            return Airport(iataCode.uppercase(), name, city, country, timeZone, id)
         }
     }
 }
@@ -42,6 +42,6 @@ fun Airport.toResponse() : AirportResponse {
         this.name,
         this.city,
         this.country,
-        this.continent,
+        this.timeZone,
     )
 }

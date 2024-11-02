@@ -1,4 +1,4 @@
-package com.faroc.flyme.flights.infrastructure.airportgap.config
+package com.faroc.flyme.common.infrastructure.airportgap.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
