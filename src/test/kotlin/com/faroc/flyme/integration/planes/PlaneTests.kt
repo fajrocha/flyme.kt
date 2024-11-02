@@ -14,6 +14,7 @@ import com.faroc.flyme.planes.infrastructure.PlaneModelRepository
 import com.faroc.flyme.planes.infrastructure.PlaneRepository
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeEquivalentTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainAll
 import org.junit.jupiter.api.BeforeEach
@@ -32,6 +33,7 @@ import kotlin.test.Test
 const val ADD_PLANE_URI = "v1/planes"
 const val FETCH_PLANES_URI = "v1/planes"
 
+@OptIn(ExperimentalStdlibApi::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration::class)
 class PlaneTests(
@@ -165,11 +167,11 @@ class PlaneTests(
 
             val paginatedPlanesAdded = listPlanesAdded.drop((pageNumber - 1) * pageSize).take(pageSize)
 
-            val expectedPlanesFetched = PaginatedResponse(
-                paginatedPlanesAdded,
+            val expectedPlanesFetched = PaginatedResponse.create(
                 pageNumber,
                 pageSize,
-                totalItems
+                totalItems,
+                paginatedPlanesAdded
             )
 
             // when:
@@ -189,7 +191,7 @@ class PlaneTests(
             val planesFetched = response.responseBody
                 ?: throw AssertionError("Plane fetched cannot be null.")
 
-            planesFetched shouldBeEqualTo expectedPlanesFetched
+            planesFetched.shouldBeEquivalentTo(expectedPlanesFetched)
         }
     }
 

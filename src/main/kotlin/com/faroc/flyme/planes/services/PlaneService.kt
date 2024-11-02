@@ -45,13 +45,13 @@ class PlaneService(
 
     suspend fun fetchPlanes(fetchPlanesRequest: FetchPaginatedRequest) : PaginatedResponse<PlaneResponse> {
         val (pageNumber, pageSize) = fetchPlanesRequest
-        val totalElements = planeRepository.count()
+        val totalItems= planeRepository.count()
 
-        val planes = planeRepository
+        val planesFetched = planeRepository
             .findAllWithPlaneModel(pageSize, fetchPlanesRequest.offset)
             .map { planeWithModelView -> planeWithModelView.toResponse() }
             .toList()
 
-        return PaginatedResponse(planes, pageNumber, pageSize, totalElements)
+        return PaginatedResponse.create(pageNumber, pageSize, totalItems, planesFetched)
     }
 }
