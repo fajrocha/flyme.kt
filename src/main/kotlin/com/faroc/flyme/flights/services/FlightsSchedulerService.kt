@@ -19,8 +19,8 @@ import com.faroc.flyme.planes.infrastructure.PlaneRepository
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class FlightsSchedulerService(

@@ -14,10 +14,10 @@ import com.faroc.flyme.flights.services.abstractions.AirportDataService
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import jakarta.transaction.Transactional
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class AirportService(

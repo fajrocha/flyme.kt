@@ -1,18 +1,22 @@
 package com.faroc.flyme.integration.airports
 
-import com.faroc.flyme.TestcontainersConfiguration
+import com.faroc.flyme.PostgresConfiguration
 import com.faroc.flyme.airports.api.request.AirportRequest
 import com.faroc.flyme.airports.api.response.AirportResponse
 import com.faroc.flyme.airports.domain.errors.AirportConflictIataCode
 import com.faroc.flyme.airports.domain.errors.AirportNotFound
 import com.faroc.flyme.airports.infrastructure.AirportRepository
 import com.faroc.flyme.common.api.middleware.ValidationProblem
+import com.faroc.flyme.configurations.MockServerConfiguration
 import com.faroc.flyme.integration.airports.utils.AirportTestsFactory
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeEquivalentTo
 import org.amshove.kluent.shouldContainAll
 import org.junit.jupiter.api.BeforeEach
+import org.mockserver.client.MockServerClient
+import org.mockserver.model.HttpRequest.request
+import org.mockserver.model.HttpResponse.response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
@@ -29,17 +33,20 @@ const val FETCH_AIRPORTS_REQUEST_URI = "v1/airports"
 
 @OptIn(ExperimentalStdlibApi::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration::class)
+@Import(PostgresConfiguration::class, MockServerConfiguration::class)
 class AirportTests(
-        @Autowired
-        private val client: WebTestClient,
-        @Autowired
-        private val airportRepository: AirportRepository,
+    @Autowired
+    private val client: WebTestClient,
+    @Autowired
+    private val airportRepository: AirportRepository,
+    @Autowired
+    private val mockServerClient: MockServerClient,
 ) {
     @BeforeEach
     fun clearDatabase() {
         runBlocking {
             airportRepository.deleteAll()
+            mockServerClient.reset()
         }
     }
 
@@ -132,6 +139,7 @@ class AirportTests(
         runBlocking {
             // given:
             val addAirportRequest = AirportTestsFactory.createAddRequest()
+            setupAirportDataFetchOk(addAirportRequest.iataCode)
 
             // when:
             val responseAdd = addAirport(addAirportRequest)
@@ -231,4 +239,39 @@ class AirportTests(
     private fun fetchAirportURI(id: Long) : String {
         return "$FETCH_AIRPORTS_REQUEST_URI/$id"
     }
+
+    private fun setupAirportDataFetchOk(iataCode: String) {
+        val airportData = """
+            {
+                "data": {
+                    "id": "$iataCode",
+                    "type": "airport",
+                    "attributes": {
+                        "name": "Los Angeles International Airport",
+                        "city": "Los Angeles",
+                        "country": "United States",
+                        "iata": "$iataCode",
+                        "icao": "KLAX",
+                        "latitude": "33.942501",
+                        "longitude": "-118.407997",
+                        "altitude": 125,
+                        "timezone": "America/Los_Angeles"
+                    }
+                }
+            }
+            """
+
+        mockServerClient.`when`(
+            request()
+                .withMethod("GET")
+                .withPath("/api/airports/${iataCode}")
+        )
+            .respond(
+                response()
+                    .withStatusCode(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(airportData.trimIndent())
+        )
+    }
 }
+

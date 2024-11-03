@@ -13,22 +13,24 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToFlow
 import org.springframework.web.server.ResponseStatusException
-
-private const val DISTANCE_URI = "airports/distance"
-private const val AIRPORT_URI = "airports"
+import org.springframework.web.util.UriComponentsBuilder
 
 @Service
 class AirportGapService(private val configuration: AirportGapConfiguration) : AirportDataService {
     private val log = LoggerFactory.getLogger(this.javaClass)
 
+    companion object {
+        const val DISTANCE_URI = "airports/distance"
+        const val AIRPORT_URI = "airports"
+    }
+
     override suspend fun fetchAirportData(
         iataCode: String ) : AirportData {
 
-        val webClient = WebClient.builder().baseUrl(configuration.apiUrl).build()
+        val webClient = buildClient()
 
         val airportDistanceReport = webClient.get()
             .uri{ u -> u.pathSegment(AIRPORT_URI, iataCode).build() }
-            .headers { configuration.buildHeaders() }
             .retrieve()
             .onStatus({ status -> status.is5xxServerError }) { _ ->
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch airport data.")
@@ -50,7 +52,7 @@ class AirportGapService(private val configuration: AirportGapConfiguration) : Ai
         arrivalAirport: String
     ) : AirportsDistanceData {
 
-        val webClient = WebClient.builder().baseUrl(configuration.apiUrl).build()
+        val webClient = buildClient()
 
         val airportDistanceReport = webClient.post()
             .uri{ u ->
@@ -59,7 +61,6 @@ class AirportGapService(private val configuration: AirportGapConfiguration) : Ai
                     .queryParam("to", arrivalAirport)
                     .build()
             }
-            .headers { configuration.buildHeaders() }
             .retrieve()
             .onStatus({ status -> status.is5xxServerError }) { _ ->
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch airports distance data.")
@@ -76,6 +77,21 @@ class AirportGapService(private val configuration: AirportGapConfiguration) : Ai
         return airportDistanceReport
             ?: throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch airports distance data.")
     }
+
+    private fun buildClient() : WebClient {
+        val baseUrl = UriComponentsBuilder
+            .fromHttpUrl(configuration.apiUrl)
+            .port(configuration.port)
+            .build()
+            .toUriString()
+
+        return WebClient.builder()
+            .defaultHeaders {
+                configuration.buildHeaders()
+            }
+            .baseUrl(baseUrl)
+            .build()
+    }
 }
 
 private fun AirportGapConfiguration.buildHeaders() : HttpHeaders {
@@ -84,3 +100,4 @@ private fun AirportGapConfiguration.buildHeaders() : HttpHeaders {
 
     return headers
 }
+

@@ -47,9 +47,10 @@ dependencies {
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
 	testImplementation("org.testcontainers:r2dbc")
-	testImplementation("io.rest-assured:rest-assured:5.5.0")
 	testImplementation("io.rest-assured:kotlin-extensions:5.5.0")
-	implementation("io.rest-assured:spring-web-test-client-kotlin-extensions:5.5.0")
+	testImplementation("io.rest-assured:spring-web-test-client-kotlin-extensions:5.5.0")
+	testImplementation("org.testcontainers:mockserver:1.20.0")
+	testImplementation("org.mock-server:mockserver-client-java:5.15.0")
 	testImplementation("org.amshove.kluent:kluent:1.73")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

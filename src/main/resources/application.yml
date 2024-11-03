@@ -19,4 +19,5 @@ springdoc:
       paths-to-match:
         - /v1/**
 airport-gap:
-  api-url: https://airportgap.com/api/
+  api-url: https://airportgap.com/api
+  port: 443

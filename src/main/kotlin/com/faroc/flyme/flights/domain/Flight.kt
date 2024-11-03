@@ -43,8 +43,7 @@ class Flight private constructor(
             airline: Long,
             departureTime: LocalDateTime,
             flightAirportsDetails: FlightAirportsDetails,
-            id: Long? = null,
-            ) : Flight {
+            id: Long? = null,) : Flight {
 
             val duration = flightAirportsDetails.distance.toFlightDistance(plane.avgSpeed)
 
@@ -86,13 +85,12 @@ fun Flight.toResponse(): ScheduleFlightResponse {
         this.arrivalTime)
 }
 
-fun Double.toFlightDistance(planeAvgSpeed : Double ): Duration {
+private fun Double.toFlightDistance(planeAvgSpeed : Double ): Duration {
     return this.div(planeAvgSpeed).toDuration(DurationUnit.HOURS)
 }
 
-fun LocalDateTime.calculateArrivalTime(flightDuration: Duration, timeZone :String): ZonedDateTime {
+private fun LocalDateTime.calculateArrivalTime(flightDuration: Duration, timeZone :String): ZonedDateTime {
     val arrivalTime = this.plus(flightDuration.toJavaDuration()).truncatedTo(ChronoUnit.SECONDS)
-
 
     return ZonedDateTime.of(
         arrivalTime,

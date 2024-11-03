@@ -5,5 +5,5 @@ import org.springframework.boot.with
 
 
 fun main(args: Array<String>) {
-	fromApplication<FlymeApplication>().with(TestcontainersConfiguration::class).run(*args)
+	fromApplication<FlymeApplication>().with(PostgresConfiguration::class).run(*args)
 }

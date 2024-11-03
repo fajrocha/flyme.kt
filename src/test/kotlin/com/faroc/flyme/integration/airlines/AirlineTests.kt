@@ -1,6 +1,6 @@
 package com.faroc.flyme.integration.airlines
 
-import com.faroc.flyme.TestcontainersConfiguration
+import com.faroc.flyme.PostgresConfiguration
 import com.faroc.flyme.airlines.api.responses.AirlinesResponse
 import com.faroc.flyme.airlines.infrastructure.AirlineRepository
 import com.faroc.flyme.airlines.domain.errors.AirlineNotFound
@@ -24,7 +24,7 @@ const val ADD_AIRLINE_URI = "v1/airlines"
 const val FETCH_AIRLINE_URI = "v1/airlines"
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration::class)
+@Import(PostgresConfiguration::class)
 class AirlineTests(
     @Autowired
     val client: WebTestClient,

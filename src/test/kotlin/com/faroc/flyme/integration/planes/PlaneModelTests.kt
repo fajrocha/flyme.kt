@@ -1,6 +1,6 @@
 package com.faroc.flyme.integration.planes
 
-import com.faroc.flyme.TestcontainersConfiguration
+import com.faroc.flyme.PostgresConfiguration
 import com.faroc.flyme.common.api.middleware.ValidationProblem
 import com.faroc.flyme.integration.planes.utils.PlaneModelRequestFactory
 import com.faroc.flyme.planes.api.requests.PlaneModelRequest
@@ -28,7 +28,7 @@ const val FETCH_PLANE_MODELS_URI = "v1/plane-model"
 
 @OptIn(ExperimentalStdlibApi::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration::class)
+@Import(PostgresConfiguration::class)
 class PlaneModelTests(
     @Autowired
     val client: WebTestClient,
