@@ -10,6 +10,7 @@ import com.faroc.flyme.flights.api.responses.ScheduleFlightResponse
 import com.faroc.flyme.flights.domain.Flight
 import com.faroc.flyme.flights.domain.FlightAirportDetails
 import com.faroc.flyme.flights.domain.FlightAirportsDetails
+import com.faroc.flyme.flights.domain.errors.FlightArrivalAirportNotFound
 import com.faroc.flyme.flights.domain.errors.FlightDepartAirportNotFound
 import com.faroc.flyme.flights.domain.toResponse
 import com.faroc.flyme.flights.infrastructure.repositories.FlightRepository
@@ -44,7 +45,7 @@ class FlightsSchedulerService(
             ?: return Err(NotFoundError(FlightDepartAirportNotFound.DESCRIPTION, FlightDepartAirportNotFound.CODE))
 
         val arrivalAirport = airportRepository.findByIataCode(arrivalIataCode)
-            ?: return Err(NotFoundError(FlightDepartAirportNotFound.DESCRIPTION, FlightDepartAirportNotFound.CODE))
+            ?: return Err(NotFoundError(FlightArrivalAirportNotFound.DESCRIPTION, FlightArrivalAirportNotFound.CODE))
 
         val flightPlane = planeRepository.findByIdFlightPlane(planeModelName)
             ?: return Err(NotFoundError(PlaneNotFound.DESCRIPTION, PlaneNotFound.CODE))
