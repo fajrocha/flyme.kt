@@ -155,6 +155,48 @@ class FlightsTests(
             response.title shouldBeEqualTo PlaneNotFound.CODE
         }
     }
+
+    @Test
+    fun `when scheduling and airline does not exist should return not found`() {
+        runBlocking {
+            // given:
+            val departureIata = "LAX"
+            val departureAirport = AirportTestsFactory.createAddRequest(
+                departureIata
+            )
+
+            AirportDataServiceMock(mockServerClient).setupAirportDataFetchOk(departureIata)
+            AirportTestsClient(client).addAirportOk(departureAirport)
+
+            val arrivalIata = "BCN"
+            val arrivalAirport = AirportTestsFactory.createAddRequest(
+                arrivalIata,
+                "Barcelona Airport",
+                "Barcelona",
+                "Spain"
+            )
+
+            AirportDataServiceMock(mockServerClient).setupAirportDataFetchOk(arrivalIata)
+            AirportTestsClient(client).addAirportOk(arrivalAirport)
+
+            val scheduleFlightRequest = FlightTestsFactory.createScheduleFlightRequest(
+                departureIata,
+                "BCN",
+                1L,
+                "United Airlines",
+                LocalDateTime.now()
+            )
+
+            // when:
+            val response = FlightTestsClient(client)
+                .scheduleFlightProblem404(scheduleFlightRequest)
+                .responseBody ?: throw AssertionError("Response body cannot be null when scheduling flight")
+
+            // then:
+            response.detail shouldBeEqualTo PlaneNotFound.DESCRIPTION
+            response.title shouldBeEqualTo PlaneNotFound.CODE
+        }
+    }
 }
 
 class FlightTestsClient(private val client: WebTestClient) {
