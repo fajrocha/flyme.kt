@@ -2,7 +2,7 @@ package com.faroc.flyme.integration.planes
 
 import com.faroc.flyme.common.api.middleware.ValidationProblem
 import com.faroc.flyme.configurations.PostgresConfiguration
-import com.faroc.flyme.integration.planes.utils.PlaneModelRequestFactory
+import com.faroc.flyme.integration.planes.utils.PlaneModelTestsFactory
 import com.faroc.flyme.planes.api.requests.PlaneModelRequest
 import com.faroc.flyme.planes.api.responses.PlaneModelResponse
 import com.faroc.flyme.planes.domain.errors.PlaneModelNotFound
@@ -44,7 +44,7 @@ class PlaneModelTests(
     fun `when adding plane model to platform should add plane model`() {
         runBlocking {
             // given:
-            val addPlaneModelRequest = PlaneModelRequestFactory.create()
+            val addPlaneModelRequest = PlaneModelTestsFactory.createAddRequest()
 
             // when:
             val planeModelAdded = PlaneModelTestsClient(client)
@@ -69,7 +69,7 @@ class PlaneModelTests(
     ) {
         runBlocking {
             // given:
-            val addPlaneModelRequest = PlaneModelRequestFactory.create("", seats)
+            val addPlaneModelRequest = PlaneModelTestsFactory.createAddRequest("", seats)
 
             // when:
             val requestResult = PlaneModelTestsClient(client)
@@ -119,7 +119,7 @@ class PlaneModelTests(
     fun `when fetching plane model by id should return plane model`() {
         runBlocking {
             // given:
-            val requestBody = PlaneModelRequestFactory.create()
+            val requestBody = PlaneModelTestsFactory.createAddRequest()
             val planeModelAdded = PlaneModelTestsClient(client)
                 .addPlaneModelOk(requestBody)
                 .responseBody
@@ -147,7 +147,7 @@ class PlaneModelTests(
     fun `when fetching plane models should return plane models`() {
         runBlocking {
             // given:
-            val addPlaneModelRequest = PlaneModelRequestFactory.create()
+            val addPlaneModelRequest = PlaneModelTestsFactory.createAddRequest()
 
             val addedPlaneModel = PlaneModelTestsClient(client)
                 .addPlaneModelOk(addPlaneModelRequest)

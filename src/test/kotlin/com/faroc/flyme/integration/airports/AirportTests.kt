@@ -10,12 +10,12 @@ import com.faroc.flyme.configurations.MockServerConfiguration
 import com.faroc.flyme.configurations.PostgresConfiguration
 import com.faroc.flyme.integration.airports.utils.AirportDataServiceMock
 import com.faroc.flyme.integration.airports.utils.AirportTestsFactory
+import com.faroc.flyme.integration.common.TestContainersTest
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeEquivalentTo
 import org.amshove.kluent.shouldContainAll
 import org.junit.jupiter.api.BeforeEach
-import org.mockserver.client.MockServerClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
@@ -37,9 +37,7 @@ class AirportTests(
     private val client: WebTestClient,
     @Autowired
     private val airportRepository: AirportRepository,
-    @Autowired
-    private val mockServerClient: MockServerClient,
-) {
+) : TestContainersTest() {
     @BeforeEach
     fun clearDatabase() {
         runBlocking {
@@ -54,6 +52,7 @@ class AirportTests(
             // given:
             val request = AirportTestsFactory.createAddRequest(iataCode = "LAX")
 
+            AirportDataServiceMock(mockServerClient).setupAirportDataFetchOk(request.iataCode)
             AirportTestsClient(client).addAirportOk(request)
 
             // when:
@@ -166,6 +165,8 @@ class AirportTests(
         runBlocking {
             // given:
             val addAirportRequest = AirportTestsFactory.createAddRequest()
+            AirportDataServiceMock(mockServerClient).setupAirportDataFetchOk(addAirportRequest.iataCode)
+
             val airportAdded = AirportTestsClient(client)
                 .addAirportOk(addAirportRequest)
                 .responseBody
@@ -192,6 +193,8 @@ class AirportTests(
         runBlocking {
             // given:
             val addAirportRequest = AirportTestsFactory.createAddRequest()
+            AirportDataServiceMock(mockServerClient).setupAirportDataFetchOk(addAirportRequest.iataCode)
+
             val airportAdded = AirportTestsClient(client)
                 .addAirportOk(addAirportRequest)
                 .responseBody

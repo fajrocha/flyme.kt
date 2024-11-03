@@ -3,8 +3,8 @@ package com.faroc.flyme.integration.planes
 import com.faroc.flyme.common.api.middleware.ValidationProblem
 import com.faroc.flyme.common.api.responses.PaginatedResponse
 import com.faroc.flyme.configurations.PostgresConfiguration
-import com.faroc.flyme.integration.planes.utils.PlaneModelRequestFactory
-import com.faroc.flyme.integration.planes.utils.PlaneRequestFactory
+import com.faroc.flyme.integration.planes.utils.PlaneModelTestsFactory
+import com.faroc.flyme.integration.planes.utils.PlaneTestsFactory
 import com.faroc.flyme.planes.api.requests.PlaneRequest
 import com.faroc.flyme.planes.api.responses.PlaneResponse
 import com.faroc.flyme.planes.domain.errors.PlaneModelNotFound
@@ -52,7 +52,7 @@ class PlaneTests(
     @Test
     fun `when adding plane but request is invalid should return bad request`() {
         runBlocking {
-            val addPlaneRequest = PlaneRequestFactory.create("")
+            val addPlaneRequest = PlaneTestsFactory.createAddRequest("")
 
             val response = PlaneTestsClient(client)
                 .addPlaneBadRequest(addPlaneRequest)
@@ -73,7 +73,7 @@ class PlaneTests(
     @Test
     fun `when adding plane but plane model does not exist should return not found`() {
         runBlocking {
-            val addPlaneRequest = PlaneRequestFactory.create("Airbus 320")
+            val addPlaneRequest = PlaneTestsFactory.createAddRequest("Airbus 320")
 
             val response = PlaneTestsClient(client)
                 .addPlaneNotFound(addPlaneRequest)
@@ -87,13 +87,13 @@ class PlaneTests(
     @Test
     fun `when adding plane should add plane to platform`() {
         runBlocking {
-            val planeModel = PlaneModelRequestFactory.create()
+            val planeModel = PlaneModelTestsFactory.createAddRequest()
             val planeModelAdded = PlaneModelTestsClient(client)
                 .addPlaneModelOk(planeModel)
                 .responseBody
                 ?: throw AssertionError("Plane model response cannot be null.")
 
-            val plane = PlaneRequestFactory.create(planeModel.name)
+            val plane = PlaneTestsFactory.createAddRequest(planeModel.name)
 
             val planeAdded = PlaneTestsClient(client)
                 .addPlaneOk(plane)
@@ -109,11 +109,11 @@ class PlaneTests(
     fun `when fetching existing plane should return plane`() {
         runBlocking {
             // given:
-            val planeModel = PlaneModelRequestFactory.create()
+            val planeModel = PlaneModelTestsFactory.createAddRequest()
 
             PlaneModelTestsClient(client).addPlaneModelOk(planeModel)
 
-            val plane = PlaneRequestFactory.create(planeModel.name)
+            val plane = PlaneTestsFactory.createAddRequest(planeModel.name)
 
             val planeAdded = PlaneTestsClient(client)
                 .addPlaneOk(plane)
@@ -142,10 +142,10 @@ class PlaneTests(
             val totalItems = 10L
             val pageSize = 5
 
-            val planeModel = PlaneModelRequestFactory.create()
+            val planeModel = PlaneModelTestsFactory.createAddRequest()
             PlaneModelTestsClient(client).addPlaneModelOk(planeModel)
 
-            val plane = PlaneRequestFactory.create(planeModel.name)
+            val plane = PlaneTestsFactory.createAddRequest(planeModel.name)
 
             val listPlanesAdded = mutableListOf<PlaneResponse>()
 

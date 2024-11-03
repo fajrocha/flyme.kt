@@ -1,28 +1,21 @@
-package com.faroc.flyme.configurations
+package com.faroc.flyme.integration.common
 
-import org.junit.jupiter.api.extension.ExtendWith
 import org.mockserver.client.MockServerClient
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.testcontainers.containers.MockServerContainer
-import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 
-@ExtendWith(SpringExtension::class)
-@TestConfiguration
-@Testcontainers
-class MockServerConfiguration {
+abstract class TestContainersTest {
     companion object {
-        private val mockServerContainer = MockServerContainer(
+        protected val mockServerContainer = MockServerContainer(
             DockerImageName.parse("mockserver/mockserver:mockserver-5.15.0")
         ).apply {
             start()
         }
 
-        private val mockServerClient = MockServerClient(
+        @JvmStatic
+        protected val mockServerClient = MockServerClient(
             mockServerContainer.host,
             mockServerContainer.serverPort
         )
@@ -34,7 +27,4 @@ class MockServerConfiguration {
             registry.add("airport-gap.port") { mockServerContainer.serverPort }
         }
     }
-
-    @Bean
-    fun mockServerClient() = mockServerClient
 }

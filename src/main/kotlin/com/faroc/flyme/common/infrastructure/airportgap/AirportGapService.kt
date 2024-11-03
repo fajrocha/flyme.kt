@@ -20,8 +20,10 @@ class AirportGapService(private val configuration: AirportGapConfiguration) : Ai
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     companion object {
-        const val DISTANCE_URI = "airports/distance"
-        const val AIRPORT_URI = "airports"
+        private const val DISTANCE_URI = "/airports/distance"
+        private const val AIRPORT_URI = "airports"
+        const val AIRPORT_ERROR_DESCRIPTION = "Failed to fetch airport data."
+        const val AIRPORTS_DISTANCE_ERROR_DESCRIPTION = "Failed to fetch airports distance data."
     }
 
     override suspend fun fetchAirportData(
@@ -32,11 +34,11 @@ class AirportGapService(private val configuration: AirportGapConfiguration) : Ai
         val airportDistanceReport = webClient.get()
             .uri{ u -> u.pathSegment(AIRPORT_URI, iataCode).build() }
             .retrieve()
-            .onStatus({ status -> status.is5xxServerError }) { _ ->
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch airport data.")
+            .onStatus({ status -> status.is4xxClientError }) { _ ->
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, AIRPORT_ERROR_DESCRIPTION)
             }
             .onStatus({ status -> status.is5xxServerError }) { _ ->
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch airport data.")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, AIRPORT_ERROR_DESCRIPTION)
             }
             .bodyToFlow<AirportData>()
             .catch { ex ->
@@ -62,7 +64,7 @@ class AirportGapService(private val configuration: AirportGapConfiguration) : Ai
                     .build()
             }
             .retrieve()
-            .onStatus({ status -> status.is5xxServerError }) { _ ->
+            .onStatus({ status -> status.is4xxClientError }) { ex ->
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch airports distance data.")
             }
             .onStatus({ status -> status.is5xxServerError }) { _ ->
