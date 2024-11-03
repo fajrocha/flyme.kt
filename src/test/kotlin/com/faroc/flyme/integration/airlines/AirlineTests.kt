@@ -1,9 +1,9 @@
 package com.faroc.flyme.integration.airlines
 
-import com.faroc.flyme.PostgresConfiguration
 import com.faroc.flyme.airlines.api.responses.AirlinesResponse
 import com.faroc.flyme.airlines.infrastructure.AirlineRepository
 import com.faroc.flyme.airlines.domain.errors.AirlineNotFound
+import com.faroc.flyme.configurations.PostgresConfiguration
 import com.faroc.flyme.integration.airlines.utils.AirlineTestsFactory
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo

@@ -1,8 +1,8 @@
 package com.faroc.flyme.integration.flights
 
-import com.faroc.flyme.PostgresConfiguration
 import com.faroc.flyme.airlines.infrastructure.AirlineRepository
 import com.faroc.flyme.airports.infrastructure.AirportRepository
+import com.faroc.flyme.configurations.PostgresConfiguration
 import com.faroc.flyme.integration.planes.ADD_PLANE_MODEL_URI
 import com.faroc.flyme.integration.planes.ADD_PLANE_URI
 import com.faroc.flyme.planes.api.requests.PlaneModelRequest

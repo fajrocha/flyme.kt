@@ -1,5 +1,6 @@
 package com.faroc.flyme
 
+import com.faroc.flyme.configurations.PostgresConfiguration
 import org.springframework.boot.fromApplication
 import org.springframework.boot.with
 

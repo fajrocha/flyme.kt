@@ -1,8 +1,8 @@
 package com.faroc.flyme.integration.planes
 
-import com.faroc.flyme.PostgresConfiguration
 import com.faroc.flyme.common.api.middleware.ValidationProblem
 import com.faroc.flyme.common.api.responses.PaginatedResponse
+import com.faroc.flyme.configurations.PostgresConfiguration
 import com.faroc.flyme.integration.planes.utils.PlaneModelRequestFactory
 import com.faroc.flyme.integration.planes.utils.PlaneRequestFactory
 import com.faroc.flyme.planes.api.requests.PlaneModelRequest

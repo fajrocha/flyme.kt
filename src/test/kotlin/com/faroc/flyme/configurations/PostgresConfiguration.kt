@@ -1,4 +1,4 @@
-package com.faroc.flyme
+package com.faroc.flyme.configurations
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection

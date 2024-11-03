@@ -1,6 +1,5 @@
 package com.faroc.flyme.integration.airports
 
-import com.faroc.flyme.PostgresConfiguration
 import com.faroc.flyme.airports.api.request.AirportRequest
 import com.faroc.flyme.airports.api.response.AirportResponse
 import com.faroc.flyme.airports.domain.errors.AirportConflictIataCode
@@ -8,6 +7,7 @@ import com.faroc.flyme.airports.domain.errors.AirportNotFound
 import com.faroc.flyme.airports.infrastructure.AirportRepository
 import com.faroc.flyme.common.api.middleware.ValidationProblem
 import com.faroc.flyme.configurations.MockServerConfiguration
+import com.faroc.flyme.configurations.PostgresConfiguration
 import com.faroc.flyme.integration.airports.utils.AirportTestsFactory
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
