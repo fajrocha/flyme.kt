@@ -20,6 +20,8 @@ import com.faroc.flyme.planes.infrastructure.PlaneRepository
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -32,7 +34,7 @@ class FlightsSchedulerService(
     private val flightRepository: FlightRepository,
 ) {
     @Transactional
-    suspend fun scheduleFlight(scheduleFlightRequest: ScheduleFlightRequest) : Result<ScheduleFlightResponse, Error> {
+    suspend fun scheduleFlight(scheduleFlightRequest: ScheduleFlightRequest) : Result<ScheduleFlightResponse, Error> = coroutineScope {
         val (
             departureIataCode,
             arrivalIataCode,
@@ -41,22 +43,23 @@ class FlightsSchedulerService(
             departureTime,
         ) = scheduleFlightRequest
 
-        val departureAirport = airportRepository.findByIataCode(departureIataCode)
-            ?: return Err(NotFoundError(FlightDepartAirportNotFound.DESCRIPTION, FlightDepartAirportNotFound.CODE))
+        val departureAirportDeferred = async { airportRepository.findByIataCode(departureIataCode) }
+        val arrivalAirportDeferred = async { airportRepository.findByIataCode(arrivalIataCode) }
+        val flightPlaneDeferred = async { planeRepository.findByIdFlightPlane(planeModelName) }
+        val airlineDeferred = async { airlineRepository.findByName(airlineName) }
+        val airportsDistanceDataDeferred = async {
+            airportDataService.fetchDistanceBetweenAirports(departureIataCode, arrivalIataCode)
+        }
 
-        val arrivalAirport = airportRepository.findByIataCode(arrivalIataCode)
-            ?: return Err(NotFoundError(FlightArrivalAirportNotFound.DESCRIPTION, FlightArrivalAirportNotFound.CODE))
-
-        val flightPlane = planeRepository.findByIdFlightPlane(planeModelName)
-            ?: return Err(NotFoundError(PlaneNotFound.DESCRIPTION, PlaneNotFound.CODE))
-
-        val airline = airlineRepository.findByName(airlineName)
-            ?: return Err(NotFoundError(AirlineNotFound.DESCRIPTION, AirlineNotFound.CODE))
-
-        val airportsDistanceData = airportDataService.fetchDistanceBetweenAirports(
-            departureIataCode,
-            arrivalIataCode
-        )
+        val departureAirport = departureAirportDeferred.await()
+            ?: return@coroutineScope Err(NotFoundError(FlightDepartAirportNotFound.DESCRIPTION, FlightDepartAirportNotFound.CODE))
+        val arrivalAirport = arrivalAirportDeferred.await()
+            ?: return@coroutineScope Err(NotFoundError(FlightArrivalAirportNotFound.DESCRIPTION, FlightArrivalAirportNotFound.CODE))
+        val flightPlane = flightPlaneDeferred.await()
+            ?: return@coroutineScope Err(NotFoundError(PlaneNotFound.DESCRIPTION, PlaneNotFound.CODE))
+        val airline = airlineDeferred.await()
+            ?: return@coroutineScope Err(NotFoundError(AirlineNotFound.DESCRIPTION, AirlineNotFound.CODE))
+        val airportsDistanceData = airportsDistanceDataDeferred.await()
 
         val flightDetails = FlightAirportsDetails(
             airportsDistanceData.data.attributes.kilometers,
@@ -75,6 +78,6 @@ class FlightsSchedulerService(
 
         val flightScheduled = flightRepository.save(flightToSchedule)
 
-        return Ok(flightScheduled.toResponse())
+        Ok(flightScheduled.toResponse())
     }
 }
