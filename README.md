@@ -10,6 +10,7 @@ Just a small project for me to mess around with reactivity using _Kotlin_ and
 - [Spring Boot 3](https://spring.io/projects/spring-boot);
 - [Spring Data R2DBC](https://spring.io/projects/spring-data-r2dbc) for data access.
 - [Flyway](https://github.com/flyway/flyway) for database migrations.
+- [Kotlin-Result](https://github.com/michaelbull/kotlin-result) to implement the result pattern.
 - [Test Containers](https://testcontainers.com/) for integration testing, both for the _PostgreSQL DB_ and to mock the
   [external REST API](https://airportgap.com/) using _MockServer Module_.
 - [Kluent](https://markusamshove.github.io/Kluent/) for fluent and readable assertions.
@@ -18,7 +19,7 @@ Just a small project for me to mess around with reactivity using _Kotlin_ and
 
 ### Postgres DB
 
-Run this on the same directory as `docker-compose.yml`:
+Run the command on the same directory as `docker-compose.yml`:
 
 ```shell
 docker compose up -d
