@@ -1,9 +1,10 @@
 package com.faroc.flyme.integration.airlines
 
-import com.faroc.flyme.TestcontainersConfiguration
+import com.faroc.flyme.airlines.api.requests.AddAirlineRequest
 import com.faroc.flyme.airlines.api.responses.AirlinesResponse
-import com.faroc.flyme.airlines.infrastructure.AirlineRepository
 import com.faroc.flyme.airlines.domain.errors.AirlineNotFound
+import com.faroc.flyme.airlines.infrastructure.AirlineRepository
+import com.faroc.flyme.configurations.PostgresConfiguration
 import com.faroc.flyme.integration.airlines.utils.AirlineTestsFactory
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
@@ -15,16 +16,16 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.http.ProblemDetail
+import org.springframework.test.web.reactive.server.EntityExchangeResult
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import kotlin.test.Test
 
-const val ADD_AIRLINE_URI = "v1/airlines"
 const val FETCH_AIRLINE_URI = "v1/airlines"
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration::class)
+@Import(PostgresConfiguration::class)
 class AirlineTests(
     @Autowired
     val client: WebTestClient,
@@ -43,26 +44,18 @@ class AirlineTests(
     fun `when adding airlines to airport should add airlines`() {
         runBlocking {
             // given:
-            val requestBody = AirlineTestsFactory.createAddRequest()
+            val addAirlineRequest = AirlineTestsFactory.createAddRequest()
 
             // when:
-            val requestResult = client.post()
-                .uri(ADD_AIRLINE_URI)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(requestBody)
-                .exchange()
-                .expectStatus().isCreated
-                .expectBody<AirlinesResponse>()
-                .returnResult()
+            val airlineAdded = AirlineTestsClient(client)
+                .addAirlineOk(addAirlineRequest)
+                .responseBody
+                ?: throw AssertionError("Response body cannot be null when adding airline.")
 
             // then:
-            val responseBody = requestResult.responseBody
-
-            val id = responseBody?.id ?: -1
-            repository.existsById(id).shouldBeTrue()
-
-            responseBody?.name shouldBeEqualTo requestBody.name
-            responseBody?.country shouldBeEqualTo requestBody.country
+            repository.existsById(airlineAdded.id).shouldBeTrue()
+            airlineAdded.name shouldBeEqualTo addAirlineRequest.name
+            airlineAdded.country shouldBeEqualTo addAirlineRequest.country
         }
     }
 
@@ -70,15 +63,11 @@ class AirlineTests(
     fun `when fetching airlines from airport should return airlines`() {
         runBlocking {
             // given:
-            val requestBody = AirlineTestsFactory.createAddRequest()
+            val addAirlineRequest = AirlineTestsFactory.createAddRequest()
 
-            val expectedAirlinesFetched = listOf(requestBody)
+            val expectedAirlinesFetched = listOf(addAirlineRequest)
 
-            client.post()
-                .uri(ADD_AIRLINE_URI) // Ensure to have the leading slash
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(requestBody)
-                .exchange()
+            AirlineTestsClient(client).addAirlineOk(addAirlineRequest)
 
             // when:
             val fetchRequest = client.get()
@@ -120,18 +109,14 @@ class AirlineTests(
     fun `when fetching airline from airport should return airline`() {
         runBlocking {
             // given:
-            val requestBody = AirlineTestsFactory.createAddRequest()
+            val addAirlineRequest = AirlineTestsFactory.createAddRequest()
 
-            val result = client.post()
-                .uri(ADD_AIRLINE_URI)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(requestBody)
-                .exchange()
-                .expectBody<AirlinesResponse>()
-                .returnResult()
+            val airlineAdded = AirlineTestsClient(client)
+                .addAirlineOk(addAirlineRequest)
+                .responseBody
+                ?: throw AssertionError("Response body cannot be null when adding airline.")
 
-            val airlineAdded = result.responseBody
-            val airlineAddedId = airlineAdded?.id ?: -1
+            val airlineAddedId = airlineAdded.id
 
             // when:
             val fetchRequest = client.get()
@@ -149,5 +134,22 @@ class AirlineTests(
 
     private fun fetchAirlineURI(id: Long) : String {
         return "$FETCH_AIRLINE_URI/$id"
+    }
+}
+
+class AirlineTestsClient(private val client: WebTestClient) {
+    companion object {
+        const val ADD_AIRLINE_URI = "v1/airlines"
+    }
+
+    fun addAirlineOk(requestBody: AddAirlineRequest) : EntityExchangeResult<AirlinesResponse> {
+        return client.post()
+            .uri(ADD_AIRLINE_URI)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(requestBody)
+            .exchange()
+            .expectStatus().isCreated
+            .expectBody<AirlinesResponse>()
+            .returnResult()
     }
 }

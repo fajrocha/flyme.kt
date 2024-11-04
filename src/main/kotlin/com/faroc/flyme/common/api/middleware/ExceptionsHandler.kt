@@ -1,8 +1,10 @@
 package com.faroc.flyme.common.api.middleware
 
+import org.springframework.http.ProblemDetail
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.bind.support.WebExchangeBindException
+import org.springframework.web.server.ResponseStatusException
 
 @RestControllerAdvice
 class ExceptionsHandler {
@@ -19,6 +21,11 @@ class ExceptionsHandler {
         }
 
         return validationProblem
+    }
+
+    @ExceptionHandler(ResponseStatusException::class)
+    fun handleResponseStatusExceptions(ex: ResponseStatusException): ProblemDetail {
+        return ProblemDetail.forStatusAndDetail(ex.statusCode, ex.reason)
     }
 }
 

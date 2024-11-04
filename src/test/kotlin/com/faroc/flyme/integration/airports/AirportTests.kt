@@ -1,13 +1,16 @@
 package com.faroc.flyme.integration.airports
 
-import com.faroc.flyme.TestcontainersConfiguration
 import com.faroc.flyme.airports.api.request.AirportRequest
 import com.faroc.flyme.airports.api.response.AirportResponse
 import com.faroc.flyme.airports.domain.errors.AirportConflictIataCode
 import com.faroc.flyme.airports.domain.errors.AirportNotFound
 import com.faroc.flyme.airports.infrastructure.AirportRepository
 import com.faroc.flyme.common.api.middleware.ValidationProblem
+import com.faroc.flyme.configurations.MockServerConfiguration
+import com.faroc.flyme.configurations.PostgresConfiguration
+import com.faroc.flyme.integration.airports.utils.AirportDataServiceMock
 import com.faroc.flyme.integration.airports.utils.AirportTestsFactory
+import com.faroc.flyme.integration.common.TestContainersTest
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeEquivalentTo
@@ -24,22 +27,22 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import kotlin.test.Test
 
-const val ADD_AIRPORT_URI = "v1/airports"
 const val FETCH_AIRPORTS_REQUEST_URI = "v1/airports"
 
 @OptIn(ExperimentalStdlibApi::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration::class)
+@Import(PostgresConfiguration::class, MockServerConfiguration::class)
 class AirportTests(
-        @Autowired
-        private val client: WebTestClient,
-        @Autowired
-        private val airportRepository: AirportRepository,
-) {
+    @Autowired
+    private val client: WebTestClient,
+    @Autowired
+    private val airportRepository: AirportRepository,
+) : TestContainersTest() {
     @BeforeEach
     fun clearDatabase() {
         runBlocking {
             airportRepository.deleteAll()
+            mockServerClient.reset()
         }
     }
 
@@ -49,20 +52,14 @@ class AirportTests(
             // given:
             val request = AirportTestsFactory.createAddRequest(iataCode = "LAX")
 
-            addAirport(request)
+            AirportDataServiceMock(mockServerClient).setupAirportDataFetchOk(request.iataCode)
+            AirportTestsClient(client).addAirportOk(request)
 
             // when:
-            val responseAdd = client.post()
-                    .uri(ADD_AIRPORT_URI)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(request)
-                    .exchange()
-                    .expectStatus().isEqualTo(409)
-                    .expectBody<ProblemDetail>()
-                    .returnResult()
-
-            val responseBodyAdd = responseAdd.responseBody
-                    ?: throw AssertionError("Response body cannot be null when adding airport.")
+            val responseBodyAdd = AirportTestsClient(client)
+                .addAirportProblem409(request)
+                .responseBody
+                ?: throw AssertionError("Response body cannot be null when adding airport.")
 
             // then:
             responseBodyAdd.detail shouldBeEqualTo AirportConflictIataCode.DESCRIPTION
@@ -82,16 +79,9 @@ class AirportTests(
             )
 
             // when:
-            val badRequestResponse = client.post()
-                .uri(ADD_AIRPORT_URI)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(addAirportRequest)
-                .exchange()
-                .expectStatus().isBadRequest()
-                .expectBody<ValidationProblem>()
-                .returnResult()
-
-            val validationProblem = badRequestResponse.responseBody
+            val validationProblem = AirportTestsClient(client)
+                .addAirportProblem400(addAirportRequest)
+                .responseBody
                 ?: throw AssertionError("Response body cannot be null when fetching airport.")
 
             // then:
@@ -133,11 +123,13 @@ class AirportTests(
             // given:
             val addAirportRequest = AirportTestsFactory.createAddRequest()
 
-            // when:
-            val responseAdd = addAirport(addAirportRequest)
+            AirportDataServiceMock(mockServerClient).setupAirportDataFetchOk(addAirportRequest.iataCode)
 
-            val airportAdded = responseAdd.responseBody
-                    ?: throw AssertionError("Response body cannot be null when fetching airport.")
+            // when:
+            val airportAdded = AirportTestsClient(client)
+                .addAirportOk(addAirportRequest)
+                .responseBody
+                ?: throw AssertionError("Response body cannot be null when fetching airport.")
 
             // then:
             addAirportRequest.shouldBeEquivalentTo(airportAdded)
@@ -173,7 +165,11 @@ class AirportTests(
         runBlocking {
             // given:
             val addAirportRequest = AirportTestsFactory.createAddRequest()
-            val airportAdded = addAirport(addAirportRequest).responseBody
+            AirportDataServiceMock(mockServerClient).setupAirportDataFetchOk(addAirportRequest.iataCode)
+
+            val airportAdded = AirportTestsClient(client)
+                .addAirportOk(addAirportRequest)
+                .responseBody
                 ?: throw AssertionError("Response body cannot be null when adding airport.")
 
             // when:
@@ -197,8 +193,13 @@ class AirportTests(
         runBlocking {
             // given:
             val addAirportRequest = AirportTestsFactory.createAddRequest()
-            val airportAdded = addAirport(addAirportRequest).responseBody
+            AirportDataServiceMock(mockServerClient).setupAirportDataFetchOk(addAirportRequest.iataCode)
+
+            val airportAdded = AirportTestsClient(client)
+                .addAirportOk(addAirportRequest)
+                .responseBody
                 ?: throw AssertionError("Response body cannot be null when adding airport.")
+
             val expectedAirportsAdded = listOf(airportAdded)
 
             // when:
@@ -217,18 +218,47 @@ class AirportTests(
         }
     }
 
-    private fun addAirport(requestBody: AirportRequest) : EntityExchangeResult<AirportResponse> {
-        return client.post()
-                .uri(ADD_AIRPORT_URI)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(requestBody)
-                .exchange()
-                .expectStatus().isCreated
-                .expectBody<AirportResponse>()
-                .returnResult()
-    }
-
     private fun fetchAirportURI(id: Long) : String {
         return "$FETCH_AIRPORTS_REQUEST_URI/$id"
     }
 }
+
+class AirportTestsClient(private val client: WebTestClient) {
+    companion object {
+        const val ADD_AIRPORT_URI = "v1/airports"
+    }
+
+    fun addAirportOk(requestBody: AirportRequest) : EntityExchangeResult<AirportResponse> {
+        return client.post()
+            .uri(ADD_AIRPORT_URI)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(requestBody)
+            .exchange()
+            .expectStatus().isCreated
+            .expectBody<AirportResponse>()
+            .returnResult()
+    }
+
+    fun addAirportProblem400(requestBody: AirportRequest) : EntityExchangeResult<ValidationProblem> {
+        return client.post()
+            .uri(ADD_AIRPORT_URI)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(requestBody)
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody<ValidationProblem>()
+            .returnResult()
+    }
+
+    fun addAirportProblem409(requestBody: AirportRequest) : EntityExchangeResult<ProblemDetail> {
+        return client.post()
+            .uri(ADD_AIRPORT_URI)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(requestBody)
+            .exchange()
+            .expectStatus().isEqualTo(409)
+            .expectBody<ProblemDetail>()
+            .returnResult()
+    }
+}
+

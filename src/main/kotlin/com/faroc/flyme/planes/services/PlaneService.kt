@@ -12,11 +12,10 @@ import com.faroc.flyme.planes.domain.errors.PlaneNotFound
 import com.faroc.flyme.planes.domain.toResponse
 import com.faroc.flyme.planes.infrastructure.PlaneModelRepository
 import com.faroc.flyme.planes.infrastructure.PlaneRepository
-import com.faroc.flyme.planes.views.toResponse
+import com.faroc.flyme.planes.services.views.toResponse
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
@@ -27,7 +26,7 @@ class PlaneService(
     private val planeModelRepository: PlaneModelRepository) {
 
     suspend fun addPlane(planeRequest: PlaneRequest) : Result<PlaneResponse, Error> {
-        val planeModel = planeModelRepository.findByName(planeRequest.planeModel).firstOrNull()
+        val planeModel = planeModelRepository.findByName(planeRequest.planeModel)
             ?: return Err(NotFoundError(PlaneModelNotFound.DESCRIPTION, PlaneModelNotFound.CODE))
 
         val plane = Plane(planeModel.id!!)
@@ -38,7 +37,7 @@ class PlaneService(
     }
 
     suspend fun fetchPlane(id: Long) : Result<PlaneResponse, Error> {
-        val planeModelView = planeRepository.findByIdWithPlaneModel(id).firstOrNull()
+        val planeModelView = planeRepository.findByIdWithPlaneModel(id)
             ?: return Err(NotFoundError(PlaneNotFound.DESCRIPTION, PlaneNotFound.CODE))
 
         return Ok(planeModelView.toResponse())
@@ -46,13 +45,13 @@ class PlaneService(
 
     suspend fun fetchPlanes(fetchPlanesRequest: FetchPaginatedRequest) : PaginatedResponse<PlaneResponse> {
         val (pageNumber, pageSize) = fetchPlanesRequest
-        val totalElements = planeRepository.count()
+        val totalItems= planeRepository.count()
 
-        val planes = planeRepository
-            .findAllWithPlaneModel(pageSize,fetchPlanesRequest.offset)
+        val planesFetched = planeRepository
+            .findAllWithPlaneModel(pageSize, fetchPlanesRequest.offset)
             .map { planeWithModelView -> planeWithModelView.toResponse() }
             .toList()
 
-        return PaginatedResponse(planes, pageNumber, pageSize, totalElements)
+        return PaginatedResponse.create(pageNumber, pageSize, totalItems, planesFetched)
     }
 }

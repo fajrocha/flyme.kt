@@ -11,14 +11,16 @@ create table if not exists "airport"
     "iata_code" char(3) not null,
     "name" text not null,
     "city" text not null,
-    "country" text not null
+    "country" text not null,
+    "time_zone" text not null
 );
 
 create table if not exists "plane_model"
 (
     "plane_model_id" bigserial constraint "pk_plane_model" primary key,
     "name" text not null,
-    "seats" smallint not null
+    "seats" smallint not null,
+    "avg_speed_kmh" real not null
 );
 
 create table if not exists "plane"
@@ -39,7 +41,7 @@ create table if not exists "flight"
         constraint "fk_flight_plane" references plane(plane_id),
     "airline_id" bigint not null
         constraint "fk_flight_airline" references airline(airline_id),
-    "duration" interval not null,
+    "duration" integer not null,
     "departure_time" timestamptz not null,
     "arrival_time" timestamptz not null
 );
@@ -65,6 +67,6 @@ create table if not exists "ticket"
         constraint "pk_ticket" primary key (passenger_id, flight_id),
     "ticket_class_id" smallint not null
         constraint "fk_ticket_class" references ticket_class(ticket_class_id),
-    "ticket_number" bigint,
-    "price" numeric(10,2)
+    "ticket_number" bigint not null,
+    "price" numeric(10,2) not null
 );

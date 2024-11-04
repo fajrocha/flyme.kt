@@ -15,17 +15,33 @@ class Airport private constructor(
     val city: String,
     @Column("country")
     val country: String,
+    @Column("time_zone")
+    val timeZone: String,
     @Id
     @Column("airport_id")
     val id: Long? = null,
 ) {
     companion object {
-        fun create(iataCode: String, name: String, city: String, country: String, id: Long? = null) : Airport {
-            return Airport(iataCode.uppercase(), name, city, country, id)
+        fun create(
+            iataCode: String,
+            name: String,
+            city: String,
+            country: String,
+            timeZone: String,
+            id: Long? = null
+        ) : Airport {
+            return Airport(iataCode.uppercase(), name, city, country, timeZone, id)
         }
     }
 }
 
 fun Airport.toResponse() : AirportResponse {
-    return AirportResponse(this.id!!, this.iataCode, this.name, this.city, this.country)
+    return AirportResponse(
+        this.id!!,
+        this.iataCode,
+        this.name,
+        this.city,
+        this.country,
+        this.timeZone,
+    )
 }

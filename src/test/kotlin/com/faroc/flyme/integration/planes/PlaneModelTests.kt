@@ -1,8 +1,8 @@
 package com.faroc.flyme.integration.planes
 
-import com.faroc.flyme.TestcontainersConfiguration
 import com.faroc.flyme.common.api.middleware.ValidationProblem
-import com.faroc.flyme.integration.planes.utils.PlaneModelRequestFactory
+import com.faroc.flyme.configurations.PostgresConfiguration
+import com.faroc.flyme.integration.planes.utils.PlaneModelTestsFactory
 import com.faroc.flyme.planes.api.requests.PlaneModelRequest
 import com.faroc.flyme.planes.api.responses.PlaneModelResponse
 import com.faroc.flyme.planes.domain.errors.PlaneModelNotFound
@@ -23,12 +23,11 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 
-const val ADD_PLANE_MODEL_URI = "v1/plane-model"
 const val FETCH_PLANE_MODELS_URI = "v1/plane-model"
 
 @OptIn(ExperimentalStdlibApi::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration::class)
+@Import( PostgresConfiguration::class)
 class PlaneModelTests(
     @Autowired
     val client: WebTestClient,
@@ -45,15 +44,15 @@ class PlaneModelTests(
     fun `when adding plane model to platform should add plane model`() {
         runBlocking {
             // given:
-            val addPlaneModelRequest = PlaneModelRequestFactory.create()
+            val addPlaneModelRequest = PlaneModelTestsFactory.createAddRequest()
 
             // when:
-            val addPlaneModelResponse = addPlaneModel(addPlaneModelRequest)
+            val planeModelAdded = PlaneModelTestsClient(client)
+                .addPlaneModelOk(addPlaneModelRequest)
+                .responseBody
+                ?: throw AssertionError("Response body when adding plane model should not be null.")
 
             // then:
-            val planeModelAdded = addPlaneModelResponse.responseBody
-                ?: throw AssertionError("Response body should not be null when adding plane model.")
-
             addPlaneModelRequest.shouldBeEquivalentTo(planeModelAdded)
             repository.existsById(planeModelAdded.id).shouldBeTrue()
         }
@@ -70,21 +69,16 @@ class PlaneModelTests(
     ) {
         runBlocking {
             // given:
-            val requestBody = PlaneModelRequestFactory.create("", seats)
+            val addPlaneModelRequest = PlaneModelTestsFactory.createAddRequest("", seats)
 
             // when:
-            val requestResult = client.post()
-                .uri(ADD_PLANE_MODEL_URI)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(requestBody)
-                .exchange()
-                .expectStatus().isBadRequest
-                .expectBody<ValidationProblem>()
-                .returnResult()
+            val requestResult = PlaneModelTestsClient(client)
+                .addPlaneModel400(addPlaneModelRequest)
+                .responseBody
+                ?: throw AssertionError("Response body when adding plane model should not be null.")
 
             // then:
-            val responseBody = requestResult.responseBody
-                ?: throw AssertionError("Response body should not be null.")
+            val responseBody = requestResult
 
             responseBody.detail shouldBeEqualTo ValidationProblem.DETAIL
             responseBody.errors.shouldNotBeEmpty()
@@ -125,10 +119,10 @@ class PlaneModelTests(
     fun `when fetching plane model by id should return plane model`() {
         runBlocking {
             // given:
-            val requestBody = PlaneModelRequestFactory.create()
-            val planeModelAddedResponse = addPlaneModel(requestBody)
-
-            val planeModelAdded = planeModelAddedResponse.responseBody
+            val requestBody = PlaneModelTestsFactory.createAddRequest()
+            val planeModelAdded = PlaneModelTestsClient(client)
+                .addPlaneModelOk(requestBody)
+                .responseBody
                 ?: throw AssertionError("Response body when adding plane model should not be null.")
 
             val planeModelId = planeModelAdded.id
@@ -153,10 +147,13 @@ class PlaneModelTests(
     fun `when fetching plane models should return plane models`() {
         runBlocking {
             // given:
-            val addPlaneModelRequest = PlaneModelRequestFactory.create()
+            val addPlaneModelRequest = PlaneModelTestsFactory.createAddRequest()
 
-            val addedPlaneModel = addPlaneModel(addPlaneModelRequest).responseBody
+            val addedPlaneModel = PlaneModelTestsClient(client)
+                .addPlaneModelOk(addPlaneModelRequest)
+                .responseBody
                 ?: throw AssertionError("Response body when adding plane model should not be null.")
+
             val expectedPlaneModelsFetched = listOf(addedPlaneModel)
 
             // when:
@@ -175,7 +172,17 @@ class PlaneModelTests(
         }
     }
 
-    private fun addPlaneModel(requestBody: PlaneModelRequest) : EntityExchangeResult<PlaneModelResponse> {
+    private fun fetchPlaneModel(id: Long) : String {
+        return "$FETCH_PLANE_MODELS_URI/$id"
+    }
+}
+
+class PlaneModelTestsClient(private val client: WebTestClient) {
+    companion object {
+        const val ADD_PLANE_MODEL_URI = "v1/plane-model"
+    }
+
+    fun addPlaneModelOk(requestBody: PlaneModelRequest) : EntityExchangeResult<PlaneModelResponse> {
         return client.post()
             .uri(ADD_PLANE_MODEL_URI)
             .contentType(MediaType.APPLICATION_JSON)
@@ -186,7 +193,14 @@ class PlaneModelTests(
             .returnResult()
     }
 
-    private fun fetchPlaneModel(id: Long) : String {
-        return "$FETCH_PLANE_MODELS_URI/$id"
+    fun addPlaneModel400(requestBody: PlaneModelRequest) : EntityExchangeResult<ValidationProblem> {
+        return client.post()
+            .uri(ADD_PLANE_MODEL_URI)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(requestBody)
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody<ValidationProblem>()
+            .returnResult()
     }
 }

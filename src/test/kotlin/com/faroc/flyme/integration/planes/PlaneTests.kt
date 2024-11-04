@@ -1,19 +1,18 @@
 package com.faroc.flyme.integration.planes
 
-import com.faroc.flyme.TestcontainersConfiguration
 import com.faroc.flyme.common.api.middleware.ValidationProblem
 import com.faroc.flyme.common.api.responses.PaginatedResponse
-import com.faroc.flyme.integration.planes.utils.PlaneModelRequestFactory
-import com.faroc.flyme.integration.planes.utils.PlaneRequestFactory
-import com.faroc.flyme.planes.api.requests.PlaneModelRequest
+import com.faroc.flyme.configurations.PostgresConfiguration
+import com.faroc.flyme.integration.planes.utils.PlaneModelTestsFactory
+import com.faroc.flyme.integration.planes.utils.PlaneTestsFactory
 import com.faroc.flyme.planes.api.requests.PlaneRequest
-import com.faroc.flyme.planes.api.responses.PlaneModelResponse
 import com.faroc.flyme.planes.api.responses.PlaneResponse
 import com.faroc.flyme.planes.domain.errors.PlaneModelNotFound
 import com.faroc.flyme.planes.infrastructure.PlaneModelRepository
 import com.faroc.flyme.planes.infrastructure.PlaneRepository
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeEquivalentTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainAll
 import org.junit.jupiter.api.BeforeEach
@@ -29,11 +28,11 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import kotlin.test.Test
 
-const val ADD_PLANE_URI = "v1/planes"
 const val FETCH_PLANES_URI = "v1/planes"
 
+@OptIn(ExperimentalStdlibApi::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration::class)
+@Import(PostgresConfiguration::class)
 class PlaneTests(
     @Autowired
     private val client: WebTestClient,
@@ -53,16 +52,10 @@ class PlaneTests(
     @Test
     fun `when adding plane but request is invalid should return bad request`() {
         runBlocking {
-            val plane = PlaneRequestFactory.create("")
+            val addPlaneRequest = PlaneTestsFactory.createAddRequest("")
 
-            val response = client.post()
-                .uri(ADD_PLANE_URI)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(plane)
-                .exchange()
-                .expectStatus().isBadRequest
-                .expectBody<ValidationProblem>()
-                .returnResult()
+            val response = PlaneTestsClient(client)
+                .addPlaneBadRequest(addPlaneRequest)
                 .responseBody
                 ?: throw AssertionError("Plane response cannot be null.")
 
@@ -80,16 +73,10 @@ class PlaneTests(
     @Test
     fun `when adding plane but plane model does not exist should return not found`() {
         runBlocking {
-            val plane = PlaneRequestFactory.create("Airbus 320")
+            val addPlaneRequest = PlaneTestsFactory.createAddRequest("Airbus 320")
 
-            val response = client.post()
-                .uri(ADD_PLANE_URI)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(plane)
-                .exchange()
-                .expectStatus().isNotFound
-                .expectBody<ProblemDetail>()
-                .returnResult()
+            val response = PlaneTestsClient(client)
+                .addPlaneNotFound(addPlaneRequest)
                 .responseBody
                 ?: throw AssertionError("Plane response cannot be null.")
 
@@ -100,13 +87,17 @@ class PlaneTests(
     @Test
     fun `when adding plane should add plane to platform`() {
         runBlocking {
-            val planeModel = PlaneModelRequestFactory.create()
-            val planeModelAdded = addPlaneModel(planeModel).responseBody
+            val planeModel = PlaneModelTestsFactory.createAddRequest()
+            val planeModelAdded = PlaneModelTestsClient(client)
+                .addPlaneModelOk(planeModel)
+                .responseBody
                 ?: throw AssertionError("Plane model response cannot be null.")
 
-            val plane = PlaneRequestFactory.create(planeModel.name)
+            val plane = PlaneTestsFactory.createAddRequest(planeModel.name)
 
-            val planeAdded = addPlane(plane).responseBody
+            val planeAdded = PlaneTestsClient(client)
+                .addPlaneOk(plane)
+                .responseBody
                 ?: throw AssertionError("Plane response cannot be null.")
 
             planeRepository.existsById(planeAdded.id).shouldBeTrue()
@@ -118,13 +109,15 @@ class PlaneTests(
     fun `when fetching existing plane should return plane`() {
         runBlocking {
             // given:
-            val planeModel = PlaneModelRequestFactory.create()
-            addPlaneModel(planeModel).responseBody
-                ?: throw AssertionError("Plane model response cannot be null.")
+            val planeModel = PlaneModelTestsFactory.createAddRequest()
 
-            val plane = PlaneRequestFactory.create(planeModel.name)
+            PlaneModelTestsClient(client).addPlaneModelOk(planeModel)
 
-            val planeAdded = addPlane(plane).responseBody
+            val plane = PlaneTestsFactory.createAddRequest(planeModel.name)
+
+            val planeAdded = PlaneTestsClient(client)
+                .addPlaneOk(plane)
+                .responseBody
                 ?: throw AssertionError("Plane response cannot be null.")
 
             val response = client.get()
@@ -149,27 +142,28 @@ class PlaneTests(
             val totalItems = 10L
             val pageSize = 5
 
-            val planeModel = PlaneModelRequestFactory.create()
-            addPlaneModel(planeModel).responseBody
-                ?: throw AssertionError("Plane model response cannot be null.")
+            val planeModel = PlaneModelTestsFactory.createAddRequest()
+            PlaneModelTestsClient(client).addPlaneModelOk(planeModel)
 
-            val plane = PlaneRequestFactory.create(planeModel.name)
+            val plane = PlaneTestsFactory.createAddRequest(planeModel.name)
 
             val listPlanesAdded = mutableListOf<PlaneResponse>()
 
             for (i in 0..<totalItems) {
-                val planeAdded = addPlane(plane).responseBody
+                val planeAdded = PlaneTestsClient(client)
+                    .addPlaneOk(plane)
+                    .responseBody
                     ?: throw AssertionError("Plane response cannot be null.")
                 listPlanesAdded.add(planeAdded)
             }
 
             val paginatedPlanesAdded = listPlanesAdded.drop((pageNumber - 1) * pageSize).take(pageSize)
 
-            val expectedPlanesFetched = PaginatedResponse(
-                paginatedPlanesAdded,
+            val expectedPlanesFetched = PaginatedResponse.create(
                 pageNumber,
                 pageSize,
-                totalItems
+                totalItems,
+                paginatedPlanesAdded
             )
 
             // when:
@@ -189,11 +183,17 @@ class PlaneTests(
             val planesFetched = response.responseBody
                 ?: throw AssertionError("Plane fetched cannot be null.")
 
-            planesFetched shouldBeEqualTo expectedPlanesFetched
+            planesFetched.shouldBeEquivalentTo(expectedPlanesFetched)
         }
     }
+}
 
-    private fun addPlane(requestBody: PlaneRequest) : EntityExchangeResult<PlaneResponse> {
+class PlaneTestsClient(private val client: WebTestClient) {
+    companion object {
+        const val ADD_PLANE_URI = "v1/planes"
+    }
+
+    fun addPlaneOk(requestBody: PlaneRequest) : EntityExchangeResult<PlaneResponse> {
         return client.post()
             .uri(ADD_PLANE_URI)
             .contentType(MediaType.APPLICATION_JSON)
@@ -204,14 +204,25 @@ class PlaneTests(
             .returnResult()
     }
 
-    private fun addPlaneModel(requestBody: PlaneModelRequest) : EntityExchangeResult<PlaneModelResponse> {
+    fun addPlaneBadRequest(requestBody: PlaneRequest) : EntityExchangeResult<ValidationProblem> {
         return client.post()
-            .uri(ADD_PLANE_MODEL_URI)
+            .uri(ADD_PLANE_URI)
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(requestBody)
             .exchange()
-            .expectStatus().isCreated
-            .expectBody<PlaneModelResponse>()
+            .expectStatus().isBadRequest
+            .expectBody<ValidationProblem>()
+            .returnResult()
+    }
+
+    fun addPlaneNotFound(requestBody: PlaneRequest) : EntityExchangeResult<ProblemDetail> {
+        return client.post()
+            .uri(ADD_PLANE_URI)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(requestBody)
+            .exchange()
+            .expectStatus().isNotFound
+            .expectBody<ProblemDetail>()
             .returnResult()
     }
 }
