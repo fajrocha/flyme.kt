@@ -14,7 +14,7 @@ Just a small project for me to mess around with reactivity using _Kotlin_ and
   [external REST API](https://airportgap.com/) using _MockServer Module_.
 - [Kluent](https://markusamshove.github.io/Kluent/) for fluent and readable assertions.
 
-## Setup
+## Setup ⚙️
 
 ### Postgres DB
 
