@@ -4,14 +4,12 @@ import com.faroc.flyme.common.infrastructure.airportgap.config.AirportGapConfigu
 import com.faroc.flyme.common.infrastructure.airportgap.responses.AirportData
 import com.faroc.flyme.common.infrastructure.airportgap.responses.AirportsDistanceData
 import com.faroc.flyme.flights.services.abstractions.AirportDataService
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.firstOrNull
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToFlow
+import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.util.UriComponentsBuilder
 
@@ -40,13 +38,9 @@ class AirportGapService(private val configuration: AirportGapConfiguration) : Ai
             .onStatus({ status -> status.is5xxServerError }) { _ ->
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, AIRPORT_ERROR_DESCRIPTION)
             }
-            .bodyToFlow<AirportData>()
-            .catch { ex ->
-                log.error("Failed to process the API response.", ex)
-            }
-            .firstOrNull()
+            .awaitBody<AirportData>()
 
-        return airportDistanceReport ?: throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch airport data.")
+        return airportDistanceReport
     }
 
     override suspend fun fetchDistanceBetweenAirports(
@@ -70,14 +64,9 @@ class AirportGapService(private val configuration: AirportGapConfiguration) : Ai
             .onStatus({ status -> status.is5xxServerError }) { _ ->
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch airports distance data.")
             }
-            .bodyToFlow<AirportsDistanceData>()
-            .catch { ex ->
-                log.error("Failed to process the API response when fetching airports distance.", ex)
-            }
-            .firstOrNull()
+            .awaitBody<AirportsDistanceData>()
 
         return airportDistanceReport
-            ?: throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to fetch airports distance data.")
     }
 
     private fun buildClient() : WebClient {
